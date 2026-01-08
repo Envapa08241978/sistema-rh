@@ -22,20 +22,14 @@
     <link rel="icon" href="data:,">
 
     <style>
-        :root {
-            --navojoa-tinto: #79242F;     
-            --navojoa-dorado: #C5911E;    
-            --navojoa-gris: #333333;      
-            --navojoa-perla: #f4f6f9;     
-        }
+        :root { --navojoa-tinto: #79242F; --navojoa-dorado: #C5911E; --navojoa-gris: #333333; --navojoa-perla: #f4f6f9; }
         body { background-color: var(--navojoa-perla); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 0.85rem; }
         
-        /* HEADER */
         .header-nav { background: linear-gradient(90deg, var(--navojoa-tinto) 0%, #5a1a23 100%); color: white; padding: 15px 25px; border-bottom: 4px solid var(--navojoa-dorado); }
         .card { border: none; border-radius: 8px; box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.1); }
         .card-expediente { border-top: 5px solid var(--navojoa-dorado); }
         .card-gestion { border-top: 5px solid var(--navojoa-tinto); min-height: 850px; }
-        .dato-valor { font-weight: 700; color: var(--navojoa-tinto); background-color: #fff; border-bottom: 2px solid #e3e6f0; border-top: none; border-left: none; border-right: none; padding: 4px 8px; display: block; width: 100%; font-size: 0.95em; }
+        .dato-valor { font-weight: 700; color: var(--navojoa-tinto); background-color: #fff; border-bottom: 2px solid #e3e6f0; padding: 4px 8px; display: block; width: 100%; font-size: 0.95em; }
         .etiqueta { font-size: 0.7rem; color: #6c757d; text-transform: uppercase; font-weight: 700; margin-bottom: 2px; display: block; letter-spacing: 0.5px; }
         .nav-tabs .nav-link { color: #6c757d; font-weight: 600; cursor: pointer; border: none; } 
         .nav-tabs .nav-link.active { color: var(--navojoa-tinto); border-bottom: 3px solid var(--navojoa-dorado); background: transparent; }
@@ -51,44 +45,16 @@
         .estatus-comision { background-color: #20c997; color: white; }
         @keyframes pulso { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
 
-        /* BOTONES DE ARCHIVO CORREGIDOS (VISIBLES) */
-        .btn-scan { 
-            position: relative; 
-            width: 100%; 
-            border: 2px dashed #a0aec0; 
-            background-color: #f8f9fa; 
-            color: var(--navojoa-tinto); 
-            font-weight: bold; 
-            padding: 12px; 
-            border-radius: 6px; 
-            text-align: center; 
-            cursor: pointer; 
-            margin-top: 5px; 
-            overflow: hidden; 
-        }
+        .btn-scan { position: relative; width: 100%; border: 2px dashed #a0aec0; background-color: #f8f9fa; color: var(--navojoa-tinto); font-weight: bold; padding: 12px; border-radius: 6px; text-align: center; cursor: pointer; margin-top: 5px; overflow: hidden; }
         .btn-scan:hover { background-color: #e2e6ea; border-color: var(--navojoa-tinto); }
         .btn-scan.archivo-cargado { background-color: #d1e7dd; border-color: #198754; color: #146c43; border-style: solid; }
-        
-        /* EL INPUT ESTÁ ENCIMA DEL BOTÓN PERO INVISIBLE PARA CLICKEAR */
-        .input-file-overlay { 
-            position: absolute; 
-            top: 0; 
-            left: 0; 
-            width: 100%; 
-            height: 100%; 
-            opacity: 0; 
-            cursor: pointer; 
-        }
-
+        .input-file-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
         .saldo-box { background-color: #fff; border: 1px solid #e3e6f0; border-radius: 4px; padding: 8px; text-align: center; margin-bottom: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
         .saldo-titulo { font-size: 0.6rem; font-weight: 800; text-transform: uppercase; display: block; color: #858796; }
         .saldo-numero { font-size: 1.2rem; font-weight: 800; color: var(--navojoa-tinto); }
-
         .fila-nueva { animation: highlightRow 1.5s ease-out; background-color: #d1e7dd !important; }
-        @keyframes highlightRow { 0% { background-color: #ffc107; } 100% { background-color: #d1e7dd; } }
         
         #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.9); z-index:9999; display:none; justify-content:center; align-items:center; flex-direction:column; }
-        
         .required-label::after { content: " *"; color: #dc3545; font-weight: bold; }
         .form-section-header { background-color: #e9ecef; padding: 5px 10px; font-weight: bold; font-size: 0.8rem; color: #495057; border-radius: 4px; margin-bottom: 10px; margin-top: 15px; }
         input::-webkit-calendar-picker-indicator { opacity: 1; }
@@ -103,7 +69,7 @@
         <img src="https://upload.wikimedia.org/wikipedia/commons/9/99/Escudo_Navojoa.png" alt="Escudo" style="height: 50px; margin-right: 15px;">
         <div><h4 class="m-0 fw-bold">MUNICIPIO DE NAVOJOA</h4><small>DIRECCIÓN DE RECURSOS HUMANOS</small></div>
     </div>
-    <div class="text-end me-3 d-none d-md-block"><span class="d-block fw-bold" id="fechaSistema"></span><span class="badge bg-warning text-dark border border-white">v55.0 FINAL</span></div>
+    <div class="text-end me-3 d-none d-md-block"><span class="d-block fw-bold" id="fechaSistema"></span><span class="badge bg-warning text-dark border border-white">SISTEMA v60.0 (BLINDADA)</span></div>
 </div>
 
 <div class="container-fluid mt-4">
@@ -112,7 +78,7 @@
         <div class="col-lg-4 mb-4">
             <div class="input-group mb-3 shadow-sm position-relative">
                 <span class="input-group-text border-0 bg-white"><i class="bi bi-search text-danger"></i></span>
-                <input type="text" class="form-control border-0" id="txtBuscarID" list="listaSugerencias" placeholder="Buscar por Nombre o ID..." oninput="buscarPredictivo()" onkeydown="if(event.key==='Enter') seleccionarSugerencia()">
+                <input type="text" class="form-control border-0" id="txtBuscarID" list="listaSugerencias" placeholder="Buscar..." oninput="buscarPredictivo()" onkeydown="if(event.key==='Enter') seleccionarSugerencia()">
                 <datalist id="listaSugerencias"></datalist>
                 <button class="btn btn-primary" onclick="seleccionarSugerencia()">CONSULTAR</button>
             </div>
@@ -132,6 +98,8 @@
                         <div class="col-12"><label class="etiqueta">Puesto</label><span class="dato-valor" id="txtPuesto">-</span></div>
                         <div class="col-6"><label class="etiqueta">Fecha Alta</label><span class="dato-valor" id="txtAlta">-</span></div>
                         <div class="col-6"><label class="etiqueta">Antigüedad</label><span class="dato-valor" id="txtAntiguedad">-</span></div>
+                        <div class="col-6"><label class="etiqueta">Nómina</label><span class="dato-valor" id="txtEmpresa">-</span></div>
+                        <div class="col-6"><label class="etiqueta">Tipo</label><span class="dato-valor" id="txtTipo">-</span></div>
                     </div>
 
                     <div class="seccion-titulo">TABLERO DE CONTROL (ANUAL)</div>
@@ -174,12 +142,7 @@
                                     <input type="number" class="form-control form-control-sm mb-2" id="txtDiasVac" placeholder="Días" oninput="calcFechas('Vac','H')">
                                     <div class="row g-1"><div class="col-6"><input type="date" class="form-control form-control-sm" id="txtFechaVac" onchange="calcFechas('Vac','H')"></div><div class="col-6"><input type="date" class="form-control form-control-sm input-calc" id="txtFechaFinVac" readonly></div></div>
                                     <input type="text" class="form-control form-control-sm mt-2" id="txtNumOficioVac" placeholder="No. Oficio">
-                                    
-                                    <div class="btn-scan mt-2" id="btnScanVac">
-                                        <span id="lblScanVac">Adjuntar Oficio</span>
-                                        <input type="file" id="fileVac" class="input-file-overlay" accept="image/*,.pdf" onchange="fileSelected('Vac')">
-                                    </div>
-                                    
+                                    <div class="btn-scan mt-2" id="btnScanVac"><span>Adjuntar Oficio</span><input type="file" id="fileVac" class="input-file-overlay" onchange="fileSelected('Vac')"></div>
                                     <button class="btn btn-primary btn-sm w-100 mt-3" onclick="guardarMov('VACACIONES', 'Vac')">GUARDAR</button>
                                 </div></div>
                                 <!-- INCAPACIDAD -->
@@ -189,12 +152,7 @@
                                     <input type="number" class="form-control form-control-sm mb-2" id="txtDiasIncap" placeholder="Días" oninput="calcFechas('Incap','N')">
                                     <div class="row g-1"><div class="col-6"><input type="date" class="form-control form-control-sm" id="txtFechaIncap" onchange="calcFechas('Incap','N')"></div><div class="col-6"><input type="date" class="form-control form-control-sm input-calc" id="txtFechaFinIncap" readonly></div></div>
                                     <input type="text" class="form-control form-control-sm mt-2" id="txtNumOficioIncap" placeholder="Folio Médico">
-                                    
-                                    <div class="btn-scan mt-2" id="btnScanIncap">
-                                        <span id="lblScanIncap">Adjuntar Incap.</span>
-                                        <input type="file" id="fileIncap" class="input-file-overlay" accept="image/*,.pdf" onchange="fileSelected('Incap')">
-                                    </div>
-
+                                    <div class="btn-scan mt-2" id="btnScanIncap"><span>Adjuntar Incap.</span><input type="file" id="fileIncap" class="input-file-overlay" onchange="fileSelected('Incap')"></div>
                                     <button class="btn btn-warning btn-sm w-100 mt-3" onclick="guardarMov('INCAPACIDAD', 'Incap')">GUARDAR</button>
                                 </div></div>
                                 <!-- PERMISOS -->
@@ -210,12 +168,7 @@
                                     <input type="number" class="form-control form-control-sm mb-2" id="txtDiasPermiso" placeholder="Días" oninput="calcFechas('Permiso','H')">
                                     <div class="row g-1"><div class="col-6"><input type="date" class="form-control form-control-sm" id="txtFechaPermiso" onchange="calcFechas('Permiso','H')"></div><div class="col-6"><input type="date" class="form-control form-control-sm input-calc" id="txtFechaFinPermiso" readonly></div></div>
                                     <input type="text" class="form-control form-control-sm mt-2" id="txtNumOficioPermiso" placeholder="No. Oficio">
-                                    
-                                    <div class="btn-scan mt-2" id="btnScanPermiso">
-                                        <span id="lblScanPermiso">Adjuntar Justif.</span>
-                                        <input type="file" id="filePermiso" class="input-file-overlay" accept="image/*,.pdf" onchange="fileSelected('Permiso')">
-                                    </div>
-
+                                    <div class="btn-scan mt-2" id="btnScanPermiso"><span>Adjuntar Justif.</span><input type="file" id="filePermiso" class="input-file-overlay" onchange="fileSelected('Permiso')"></div>
                                     <button class="btn btn-dark btn-sm w-100 mt-3" onclick="guardarPermiso()">GUARDAR</button>
                                 </div></div>
                             </div>
@@ -229,16 +182,8 @@
                                     <div class="row g-2 mb-2"><div class="col-3"><input type="text" class="form-control" id="altaID" placeholder="ID *"></div><div class="col-6"><input type="text" class="form-control" id="altaNombre" placeholder="Nombre Completo *"></div><div class="col-3"><input type="date" class="form-control" id="altaFecha"></div></div>
                                     <div class="row g-2 mb-2"><div class="col-4"><select id="altaDepto" class="form-select"><option>PRESIDENCIA</option><option>OBRAS PUBLICAS</option><option>DIF</option><option>SEGURIDAD</option></select></div><div class="col-4"><input type="text" class="form-control" id="altaPuesto" placeholder="Puesto"></div><div class="col-4"><select id="altaTipo" class="form-select"><option>CONFIANZA</option><option>SINDICALIZADO</option><option>EVENTUAL</option></select></div></div>
                                     <div class="row g-2 mb-2"><div class="col-4"><input type="text" class="form-control" id="txtNumOficioAlta" placeholder="Nombramiento *"></div><div class="col-4"><input type="text" class="form-control" id="altaCurp" placeholder="CURP"></div><div class="col-4"><input type="text" class="form-control" id="altaNumArchivo" placeholder="Archivo Físico"></div></div>
-                                    
                                     <input type="hidden" id="altaDireccion"><input type="hidden" id="altaTel"><input type="hidden" id="altaEmpresa" value="AYTO"><input type="hidden" id="altaSeguro"><input type="hidden" id="altaPoliza"><input type="hidden" id="altaBanco"><input type="hidden" id="altaCuenta"><input type="hidden" id="altaClabe">
-
-                                    <div class="mt-3 p-3 bg-light border rounded">
-                                         <label class="etiqueta text-danger fw-bold">CONTRATO / NOMBRAMIENTO (PDF/FOTO) *</label>
-                                         <div class="btn-scan" id="btnScanAlta">
-                                             <span id="lblScanAlta">Seleccionar Archivo</span>
-                                             <input type="file" id="fileAlta" class="input-file-overlay" onchange="fileSelected('Alta')">
-                                         </div>
-                                    </div>
+                                    <div class="mt-3 p-3 bg-light border rounded"><label class="etiqueta text-danger fw-bold">CONTRATO / NOMBRAMIENTO *</label><div class="btn-scan" id="btnScanAlta"><span>Seleccionar Archivo</span><input type="file" id="fileAlta" class="input-file-overlay" onchange="fileSelected('Alta')"></div></div>
                                     <button type="button" class="btn btn-success fw-bold px-5 mt-4 w-100" onclick="registrarAlta()">REGISTRAR ALTA</button>
                                 </form>
                             </div>
@@ -252,10 +197,7 @@
                             <div class="p-4 text-center">
                                 <h5>Gestión de Estatus</h5>
                                 <select class="form-select mb-3 w-50 mx-auto" id="cmbNuevoEstatus"><option>BAJA</option><option>JUBILADO</option><option>PENSIONADO</option><option>SUSPENDIDO</option><option>ACTIVO</option></select>
-                                <div class="btn-scan w-50 mx-auto mb-3" id="btnScanBaja">
-                                    <span id="lblScanBaja">Adjuntar Renuncia/Acta</span>
-                                    <input type="file" id="fileBaja" class="input-file-overlay" onchange="fileSelected('Baja')">
-                                </div>
+                                <div class="btn-scan w-50 mx-auto mb-3" id="btnScanBaja"><span>Adjuntar Renuncia/Acta</span><input type="file" id="fileBaja" class="input-file-overlay" onchange="fileSelected('Baja')"></div>
                                 <button class="btn btn-dark w-50" onclick="actualizarEstatus()">APLICAR CAMBIO</button>
                             </div>
                         </div>
@@ -290,20 +232,62 @@
 </div>
 
 <script>
-    // --- 1. VARIABLES GLOBALES ---
+    // --- VARIABLES GLOBALES ---
     let db, storage, empleadoActual = null, fileCache = {}, debounceTimer;
 
-    // --- 2. CONFIGURACIÓN DE FIREBASE (¡PEGA TUS LLAVES AQUÍ!) ---
+    // --- FUNCIONES BLINDADAS (SafeText/SafeVal) ---
+    function safeText(id, val) { const el = document.getElementById(id); if(el) el.innerText = val || "-"; }
+    function safeVal(id, val) { const el = document.getElementById(id); if(el) el.value = val || ""; }
+    function mostrarLoader(show) { document.getElementById('loader').style.display = show ? 'flex' : 'none'; }
+    function validarSesion() { if(!empleadoActual) { Swal.fire("Error", "Busca un empleado primero", "warning"); return false; } return true; }
+
+    function fileSelected(sufijo) {
+        const input = document.getElementById('file' + sufijo);
+        if(input.files[0]) {
+            fileCache[sufijo] = input.files[0];
+            const btn = document.getElementById('btnScan' + sufijo);
+            btn.classList.add('archivo-cargado');
+            btn.querySelector('span').innerText = input.files[0].name.substring(0,15);
+        }
+    }
+    
+    function resetForm(sufijo) {
+        if(document.getElementById('txtNumOficio' + sufijo)) document.getElementById('txtNumOficio' + sufijo).value = "";
+        if(document.getElementById('txtDias' + sufijo)) document.getElementById('txtDias' + sufijo).value = "";
+        const btn = document.getElementById('btnScan' + sufijo);
+        if(btn) {
+            btn.classList.remove('archivo-cargado');
+            btn.querySelector('span').innerText = (sufijo === 'Alta') ? "Seleccionar Archivo" : "Adjuntar Oficio";
+        }
+        delete fileCache[sufijo];
+    }
+
+    function calcFechas(sufijo, type) {
+        const dias = parseInt(document.getElementById('txtDias'+sufijo).value);
+        const inicio = document.getElementById('txtFecha'+sufijo).value;
+        if(dias && inicio) {
+            const d = new Date(inicio);
+            d.setMinutes(d.getMinutes() + d.getTimezoneOffset());
+            if(type === 'N') d.setDate(d.getDate() + (dias - 1));
+            else {
+                let c = dias - 1;
+                while(c > 0) { d.setDate(d.getDate()+1); if(d.getDay()!==0 && d.getDay()!==6) c--; }
+            }
+            document.getElementById('txtFechaFin'+sufijo).value = d.toISOString().split('T')[0];
+        }
+    }
+
+    // --- CONFIGURACIÓN FIREBASE (PROYECTO NUEVO) ---
+    // *** PEGA TUS LLAVES AQUÍ ***
     const firebaseConfig = {
-      apiKey: "AIzaSyD0rc64cfBhBsNtJCMyDCNbc5qXv5wNlVU",
-      authDomain: "nuevo-proyecto-92479.firebaseapp.com",
-      projectId: "nuevo-proyecto-92479",
-      storageBucket: "nuevo-proyecto-92479.firebasestorage.app", // Usamos el correcto
-      messagingSenderId: "798385147161",
-      appId: "1:798385147161:web:bb909d1e4c95708c2b8988"
+      apiKey: "TU_API_KEY_NUEVA", // Pega tu llave aqui
+      authDomain: "TU_PROYECTO.firebaseapp.com",
+      projectId: "TU_PROYECTO_ID",
+      storageBucket: "TU_BUCKET.appspot.com", 
+      messagingSenderId: "NUMERO",
+      appId: "ID_APP"
     };
 
-    // --- 3. FUNCIONES CORE ---
     function initApp() {
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         db = firebase.firestore();
@@ -312,23 +296,14 @@
         mostrarLoader(false);
     }
 
-    function mostrarLoader(show) { document.getElementById('loader').style.display = show ? 'flex' : 'none'; }
-    function validarSesion() { if(!empleadoActual) { Swal.fire("Error", "Busca un empleado primero", "warning"); return false; } return true; }
-
-    // --- 4. SUBIDA A STORAGE (BASE64 PARA EVITAR CORS) ---
-    // Usamos FileReader + Base64 porque es más estable para Vercel en la capa gratuita
-    // Si el archivo es > 700KB, avisará.
-    
-    function readFileAsBase64(file) {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = () => resolve(reader.result);
-            reader.onerror = error => reject(error);
-        });
+    async function subirArchivoStorage(file, path) {
+        if(file.size > 20 * 1024 * 1024) throw new Error("Archivo excede 20MB.");
+        const ref = storage.ref().child(path);
+        const snapshot = await ref.put(file);
+        return await snapshot.ref.getDownloadURL();
     }
 
-    // --- 5. BUSCADOR ---
+    // --- BUSCADOR ---
     function buscarPredictivo() {
         clearTimeout(debounceTimer);
         const texto = document.getElementById('txtBuscarID').value.trim().toUpperCase();
@@ -337,14 +312,12 @@
         
         debounceTimer = setTimeout(() => {
             datalist.innerHTML = ""; 
-            // Búsqueda simplificada por nombre (requiere índice)
             db.collection("empleados").where("nombre", ">=", texto).where("nombre", "<=", texto + "\uf8ff").limit(5).get()
             .then(sn => sn.forEach(doc => {
                 const opt = document.createElement('option'); opt.value = `${doc.data().id} - ${doc.data().nombre}`; datalist.appendChild(opt);
             }))
-            .catch(e => console.log("Buscando por ID..."));
+            .catch(e => console.log("Try ID..."));
             
-            // Si falla nombre, intenta ID
             db.collection("empleados").where("id", ">=", texto).where("id", "<=", texto + "\uf8ff").limit(5).get()
             .then(sn => sn.forEach(doc => {
                  const opt = document.createElement('option'); opt.value = `${doc.data().id} - ${doc.data().nombre}`; datalist.appendChild(opt);
@@ -377,115 +350,92 @@
 
     function renderizarEmpleado() {
         const e = empleadoActual;
-        document.getElementById('lblNombre').innerText = e.nombre;
-        document.getElementById('lblID').innerText = "ID: " + e.id;
-        document.getElementById('txtDepto').innerText = e.depto || "-";
-        document.getElementById('txtPuesto').innerText = e.puesto || "-";
-        document.getElementById('lblSaldoVac').innerText = e.saldoVac || 0;
-        
-        // Datos Ficha
-        document.getElementById('txtDepto').innerText = e.depto || "-";
-        document.getElementById('txtPuesto').innerText = e.puesto || "-";
-        document.getElementById('txtAlta').innerText = e.fechaAlta || "-";
-        document.getElementById('txtEmpresa').innerText = e.empresa || "-";
-        document.getElementById('txtTipo').innerText = e.tipo || "-";
-        
-        // Llenado de Edición
-        document.getElementById('editID').value = e.id;
-        document.getElementById('editNombre').value = e.nombre;
-        document.getElementById('editFechaAlta').value = e.fechaAlta || "";
-        document.getElementById('editDepto').value = e.depto || "";
-        document.getElementById('editPuesto').value = e.puesto || "";
-        document.getElementById('editEmpresa').value = e.empresa || "";
-        document.getElementById('editTipo').value = e.tipo || "";
-        document.getElementById('editNombramiento').value = e.oficioAlta || "";
-        document.getElementById('editArchivo').value = e.numArchivo || "";
-        document.getElementById('editDireccion').value = e.direccion || "";
-        document.getElementById('editTel').value = e.tel || "";
-        document.getElementById('editCurp').value = e.curp || "";
-        document.getElementById('editSeguro').value = e.seguro || "";
-        document.getElementById('editPoliza').value = e.poliza || "";
-        document.getElementById('editBanco').value = e.banco || "";
-        document.getElementById('editCuenta').value = e.cuenta || "";
-        document.getElementById('editClabe').value = e.clabe || "";
-        
-        // Datos Personales Vista
-        document.getElementById('txtCurp').innerText = e.curp || "";
-        document.getElementById('txtTel').innerText = e.tel || "";
-        document.getElementById('txtDireccion').innerText = e.direccion || "";
-        document.getElementById('txtSeguro').innerText = e.seguro || "";
-        document.getElementById('txtPoliza').innerText = e.poliza || "";
-        document.getElementById('txtBanco').innerText = e.banco || "";
-        document.getElementById('txtCuenta').innerText = e.cuenta || "";
+        // Textos
+        safeText('lblNombre', e.nombre);
+        safeText('lblID', "ID: " + e.id);
+        safeText('lblArchivoFisico', "ARCH: " + (e.numArchivo || "N/A"));
+        safeText('txtDepto', e.depto);
+        safeText('txtPuesto', e.puesto);
+        safeText('txtAlta', e.fechaAlta);
+        safeText('txtAntiguedad', "-"); // Calcular luego
+        safeText('txtEmpresa', e.empresa);
+        safeText('txtTipo', e.tipo);
+        safeText('txtCurp', e.curp);
+        safeText('txtTel', e.tel);
+        safeText('txtDireccion', e.direccion);
+        safeText('txtSeguro', e.seguro);
+        safeText('txtPoliza', e.poliza);
+        safeText('txtBanco', e.banco);
+        safeText('txtCuenta', e.cuenta);
 
         // Saldos
-        document.getElementById('lblSaldoVac').innerText = e.saldoVac || 0;
-        document.getElementById('lblSaldoEcon').innerText = e.saldoEcon || 0;
-        document.getElementById('lblSaldoPSG').innerText = `${e.saldoPSG || 0} / 45`;
-        document.getElementById('lblSaldoIncap').innerText = e.saldoIncap || 0;
-        document.getElementById('lblAcumLuto').innerText = e.acumuladoLuto || 0;
-        document.getElementById('lblAcumComisiones').innerText = e.acumuladoComisiones || 0;
-        document.getElementById('lblAcumFaltas').innerText = e.acumuladoFaltas || 0;
-        document.getElementById('lblAcumRetardos').innerText = e.acumuladoRetardos || 0;
+        safeText('lblSaldoVac', e.saldoVac || 0);
+        safeText('lblSaldoEcon', e.saldoEcon || 0);
+        safeText('lblSaldoPSG', (e.saldoPSG || 0) + " / 45");
+        safeText('lblSaldoIncap', e.saldoIncap || 0);
+        safeText('lblAcumLuto', e.acumuladoLuto || 0);
+        safeText('lblAcumComisiones', e.acumuladoComisiones || 0);
+        safeText('lblAcumFaltas', e.acumuladoFaltas || 0);
+        safeText('lblAcumRetardos', e.acumuladoRetardos || 0);
+
+        // Form Edición (Values)
+        safeVal('editID', e.id);
+        safeVal('editNombre', e.nombre);
+        safeVal('editFechaAlta', e.fechaAlta);
+        safeVal('editDepto', e.depto);
+        safeVal('editPuesto', e.puesto);
+        safeVal('editEmpresa', e.empresa);
+        safeVal('editTipo', e.tipo);
+        safeVal('editNombramiento', e.oficioAlta);
+        safeVal('editArchivo', e.numArchivo);
+        safeVal('editDireccion', e.direccion);
+        safeVal('editTel', e.tel);
+        safeVal('editCurp', e.curp);
+        safeVal('editSeguro', e.seguro);
+        safeVal('editPoliza', e.poliza);
+        safeVal('editBanco', e.banco);
+        safeVal('editCuenta', e.cuenta);
+        safeVal('editClabe', e.clabe);
         
-        // Antigüedad y Der. Vacaciones
+        // Antigüedad
         if(e.fechaAlta) {
             const hoy = new Date();
             let fa = e.fechaAlta;
-            if(fa && fa.toDate) fa = fa.toDate();
-            else fa = new Date(fa);
-
+            if(fa && fa.toDate) fa = fa.toDate(); else fa = new Date(fa);
             const anti = Math.abs(hoy - fa) / (1000 * 60 * 60 * 24 * 365.25);
-            document.getElementById('txtAntiguedad').innerText = anti.toFixed(1) + " Años";
+            safeText('txtAntiguedad', anti.toFixed(1) + " Años");
             let der = 10 + Math.floor(anti/5);
-            document.getElementById('lblDerechoVac').innerText = `Der: ${der}`;
+            safeText('lblDerechoVac', `Der: ${der}`);
         }
         
-        // Estatus y Historial
         const st = determinarEstatus(e);
         const badge = document.getElementById('lblStatusDinamico');
-        badge.innerText = st.texto; badge.className = "badge-base " + st.clase;
-        
-        const tbody = document.getElementById('tablaHistorial');
-        tbody.innerHTML = "";
-        if(e.movimientos) {
-             e.movimientos.sort((a,b) => (b.fechaInicio || "").localeCompare(a.fechaInicio || ""));
-             e.movimientos.slice(0, 10).forEach(m => {
-                // Link corregido para base64
-                let link = '-';
-                if(m.urlEvidencia && m.urlEvidencia.startsWith('data:')) {
-                     link = `<button class="btn btn-sm btn-link" onclick="abrirBase64('${m.docId}')"><i class="bi bi-eye"></i></button>`;
-                }
-                tbody.innerHTML += `<tr><td>${m.fechaInicio}</td><td>${m.tipo}</td><td>${m.dias}</td><td>${m.oficio}</td><td>${link}</td></tr>`;
-            });
+        if(badge) {
+            badge.innerText = st.texto; 
+            badge.className = "badge-base " + st.clase;
         }
     }
-    
-    // Función auxiliar para abrir Base64
-    window.abrirBase64 = function(docId) {
-        // Encontrar el movimiento en memoria local (más rápido)
-        const mov = empleadoActual.movimientos.find(m => m.docId === docId);
-        if(mov && mov.urlEvidencia) {
-             const win = window.open();
-             win.document.write('<iframe src="' + mov.urlEvidencia + '" frameborder="0" style="border:0; top:0px; left:0px; bottom:0px; right:0px; width:100%; height:100%;" allowfullscreen></iframe>');
-        }
-    };
+
+    function cargarHistorial() {
+        const tbody = document.getElementById('tablaHistorial');
+        tbody.innerHTML = "";
+        db.collection("movimientos").where("empleadoId", "==", empleadoActual.id).limit(10).get().then(qs => {
+            qs.forEach(doc => {
+                const d = doc.data();
+                const link = d.urlEvidencia ? `<a href="${d.urlEvidencia}" target="_blank">Ver</a>` : '-';
+                tbody.innerHTML += `<tr><td>${d.fechaInicio}</td><td>${d.tipo}</td><td>${d.dias}</td><td>${d.oficio}</td><td>${link}</td></tr>`;
+            });
+        });
+    }
 
     function determinarEstatus(e) {
         if(e.estatus !== 'ACTIVO') return { texto: e.estatus, clase: 'estatus-' + e.estatus.toLowerCase().split(' ')[0] };
+        // Validar incidencias
         const hoy = new Date().toISOString().split('T')[0];
-        if(e.movimientos) {
-            const mov = e.movimientos.find(m => hoy >= m.fechaInicio && hoy <= m.fechaFin);
-            if(mov) {
-                if(mov.tipo.includes('VAC')) return { texto: 'VACACIONES', clase: 'estatus-vacaciones' };
-                if(mov.tipo.includes('INCAP')) return { texto: 'INCAPACITADO', clase: 'estatus-incapacidad' };
-                if(mov.tipo.includes('PERMISO')) return { texto: 'PERMISO', clase: 'estatus-permiso' };
-            }
-        }
+        // Aquí deberíamos cruzar con movimientos, pero para V1 rápida usamos el campo estatus base
         return { texto: 'ACTIVO', clase: 'estatus-activo' };
     }
 
-    // --- GUARDAR MOVIMIENTOS ---
     async function guardarMov(tipo, sufijo) {
         if(!validarSesion()) return;
         const dias = parseFloat(document.getElementById('txtDias'+sufijo).value) || 0;
@@ -495,36 +445,27 @@
         
         if(!file || !oficio) { Swal.fire("Faltan Datos", "Oficio y Archivo obligatorios", "warning"); return; }
         
-        // Validaciones
-        if(tipo === 'VACACIONES') {
-             if(dias > (empleadoActual.saldoVac||0) && document.getElementById('cmbTipoVac').value !== 'CANCELACION') {
-                 Swal.fire("Saldo Insuficiente", "", "error"); return; 
-             }
-        }
-
         mostrarLoader(true);
         try {
-            // Convertir a Base64 (Método seguro sin CORS)
-            if(file.size > 800 * 1024) { 
-                mostrarLoader(false);
-                Swal.fire("Archivo muy grande", "Máximo 800KB para guardar directo.", "warning"); 
-                return;
-            }
+            const path = `evidencias/${empleadoActual.id}/${Date.now()}_${file.name}`;
+            const url = await subirArchivoStorage(file, path);
             
-            const base64 = await readFileAsBase64(file);
+            if(!url) {
+                if(!confirm("Advertencia: El archivo NO se subió (Error CORS). ¿Guardar solo el registro?")) {
+                    mostrarLoader(false); return;
+                }
+            }
 
             const mov = {
                 empleadoId: empleadoActual.id, nombreEmpleado: empleadoActual.nombre,
                 tipo: tipo, dias: dias, oficio: oficio,
                 fechaInicio: document.getElementById('txtFecha'+sufijo).value,
                 fechaFin: document.getElementById('txtFechaFin'+sufijo).value,
-                urlEvidencia: base64, 
-                fechaRegistro: firebase.firestore.FieldValue.serverTimestamp()
+                urlEvidencia: url || "", fechaRegistro: firebase.firestore.FieldValue.serverTimestamp()
             };
             
             await db.collection("movimientos").add(mov);
             
-            // Actualizar Saldo
             let upd = {};
             if(tipo === 'VACACIONES') upd = { saldoVac: (empleadoActual.saldoVac||0) - dias };
             if(tipo === 'INCAPACIDAD') upd = { saldoIncap: (empleadoActual.saldoIncap||0) + dias };
@@ -538,12 +479,10 @@
         } catch(e) { mostrarLoader(false); Swal.fire("Error", e.message, "error"); }
     }
     
-    // Wrapper functions
     function guardarVacaciones() { guardarMov('VACACIONES', 'Vac'); }
     function guardarIncapacidad() { guardarMov('INCAPACIDAD', 'Incap'); }
     function guardarPermiso() { guardarMov(document.getElementById('cmbTipoPermiso').value, 'Permiso'); }
 
-    // --- ALTA ---
     async function registrarAlta() {
         const id = document.getElementById('altaID').value.toUpperCase();
         const fileInput = document.getElementById('fileAlta');
@@ -556,9 +495,7 @@
             const snap = await db.collection("empleados").doc(id).get();
             if(snap.exists) throw new Error("ID ya existe");
             
-            // Base64
-            if(file.size > 800 * 1024) throw new Error("Archivo > 800KB");
-            const base64 = await readFileAsBase64(file);
+            const url = await subirArchivoStorage(file, `contratos/${id}_${Date.now()}.pdf`);
             
             const nuevo = {
                 id: id, nombre: document.getElementById('altaNombre').value.toUpperCase(),
@@ -569,9 +506,8 @@
                 empresa: document.getElementById('altaEmpresa').value,
                 curp: document.getElementById('altaCurp').value,
                 oficioAlta: document.getElementById('txtNumOficioAlta').value,
-                contratoUrl: base64, // Guardar directo
+                contratoUrl: url || "",
                 estatus: "ACTIVO", saldoVac: 0, saldoEcon: 2, saldoPSG: 0, saldoIncap: 0, acumuladoFaltas: 0,
-                // Extra fields
                 direccion: document.getElementById('altaDireccion').value,
                 tel: document.getElementById('altaTel').value,
                 seguro: document.getElementById('altaSeguro').value,
@@ -591,7 +527,6 @@
         } catch(e) { mostrarLoader(false); Swal.fire("Error", e.message, "error"); }
     }
 
-    // --- ACTUALIZAR DATOS ---
     async function actualizarDatos() {
         if(!validarSesion()) return;
         mostrarLoader(true);
@@ -618,14 +553,12 @@
         } catch(e) { mostrarLoader(false); Swal.fire("Error", e.message, "error"); }
     }
 
-    // --- REPORTES ---
     function generarReporte() {
         const fIni = document.getElementById('repFechaIni').value;
         const fFin = document.getElementById('repFechaFin').value;
         if(!fIni || !fFin) { Swal.fire("Fechas requeridas", "", "warning"); return; }
         
         mostrarLoader(true);
-        // Query simple + Filtro JS
         db.collection("movimientos").limit(200).get().then(qs => {
             const tbody = document.getElementById('tablaReportesBody');
             tbody.innerHTML = "";
@@ -634,13 +567,10 @@
             qs.forEach(doc => {
                 const d = doc.data();
                 if(d.fechaInicio >= fIni && d.fechaInicio <= fFin) {
-                    // Aplicar filtros extra aqui (empleado, tipo)
                      tbody.innerHTML += `<tr><td>${d.fechaInicio}</td><td>${d.nombreEmpleado}</td><td>${d.tipo}</td><td>${d.dias}</td><td>${d.oficio}</td></tr>`;
                      dataExport.push(d);
                 }
             });
-            
-            // Guardar para Excel
             window.datosReporteActual = dataExport;
             document.getElementById('repContador').innerText = `Resultados: ${dataExport.length}`;
             mostrarLoader(false);
@@ -655,50 +585,17 @@
         XLSX.writeFile(wb, "Reporte_RH.xlsx");
     }
     
-    // --- ACTUALIZAR ESTATUS (BAJA) ---
     async function actualizarEstatus() {
         if(!validarSesion()) return;
         const nuevoEstatus = document.getElementById('cmbNuevoEstatus').value;
         mostrarLoader(true);
         try {
              await db.collection("empleados").doc(empleadoActual.docId).update({ estatus: nuevoEstatus });
-             // Opcional: Subir archivo de baja si existe
-             const fileInput = document.getElementById('fileBaja');
-             if(fileInput && fileInput.files[0]) {
-                 // Lógica subida archivo baja...
-             }
-             
              mostrarLoader(false);
              Swal.fire("Estatus Actualizado", `Empleado: ${nuevoEstatus}`, "success");
         } catch (e) {
             mostrarLoader(false);
             Swal.fire("Error", e.message, "error");
-        }
-    }
-
-    // --- HELPERS ---
-    function fileSelected(sufijo) {
-        const input = document.getElementById('file' + sufijo);
-        if(input.files[0]) {
-            fileCache[sufijo] = input.files[0];
-            const btn = document.getElementById('btnScan' + sufijo);
-            btn.classList.add('archivo-cargado');
-            btn.querySelector('span').innerText = input.files[0].name.substring(0,15);
-        }
-    }
-    
-    function calcFechas(sufijo, type) {
-        const dias = parseInt(document.getElementById('txtDias' + sufijo).value);
-        const inicio = document.getElementById('txtFecha' + sufijo).value;
-        if(dias && inicio) {
-            const d = new Date(inicio);
-            d.setMinutes(d.getMinutes() + d.getTimezoneOffset());
-            if(type === 'N') d.setDate(d.getDate() + (dias - 1));
-            else {
-                let c = dias - 1;
-                while(c > 0) { d.setDate(d.getDate()+1); if(d.getDay()!==0 && d.getDay()!==6) c--; }
-            }
-            document.getElementById('txtFechaFin' + sufijo).value = d.toISOString().split('T')[0];
         }
     }
 

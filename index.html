@@ -86,7 +86,7 @@
         <img src="https://upload.wikimedia.org/wikipedia/commons/9/99/Escudo_Navojoa.png" alt="Escudo" style="height: 50px; margin-right: 15px;">
         <div><h4 class="m-0 fw-bold">MUNICIPIO DE NAVOJOA</h4><small>DIRECCIÓN DE RECURSOS HUMANOS</small></div>
     </div>
-    <div class="text-end me-3 d-none d-md-block"><span class="d-block fw-bold" id="fechaSistema"></span><span class="badge bg-warning text-dark border border-white">v65.0 ESTATUS INTELIGENTE</span></div>
+    <div class="text-end me-3 d-none d-md-block"><span class="d-block fw-bold" id="fechaSistema"></span><span class="badge bg-warning text-dark border border-white">SISTEMA v66.0</span></div>
 </div>
 
 <div class="container-fluid mt-4">
@@ -105,9 +105,13 @@
                     <div class="text-center mb-4">
                         <div class="foto-perfil"><i class="bi bi-person-fill fs-1 text-secondary"></i></div>
                         <h5 class="fw-bold text-dark mb-1" id="lblNombre">---</h5>
-                        <div class="mb-2"><span class="badge bg-dark" id="lblID">ID: ---</span></div>
                         
-                        <!-- AQUI VA EL ESTATUS INTELIGENTE -->
+                        <!-- ID Y ARCHIVO (AJUSTADO) -->
+                        <div class="mb-2 d-flex flex-column align-items-center gap-1">
+                            <span class="badge bg-dark fs-6" id="lblID">ID: ---</span>
+                            <span class="badge bg-secondary" id="lblArchivoFisico">ARCH: ---</span>
+                        </div>
+                        
                         <div id="contenedorEstatus" class="mt-3">
                             <span class="badge-base estatus-activo" id="lblStatusDinamico">ACTIVO</span>
                         </div>
@@ -118,7 +122,7 @@
                         <div class="col-12"><label class="etiqueta">Departamento</label><span class="dato-valor" id="txtDepto">-</span></div>
                         <div class="col-12"><label class="etiqueta">Puesto</label><span class="dato-valor" id="txtPuesto">-</span></div>
                         <div class="col-6"><label class="etiqueta">Fecha Alta</label><span class="dato-valor" id="txtAlta">-</span></div>
-                        <div class="col-6"><label class="etiqueta">Antigüedad</label><span class="dato-valor" id="txtAntiguedad">-</span></div>
+                        <div class="col-6"><label class="etiqueta">Antigüedad</label><span class="dato-valor" style="color: var(--navojoa-dorado);" id="txtAntiguedad">-</span></div>
                         <div class="col-6"><label class="etiqueta">Nómina</label><span class="dato-valor" id="txtEmpresa">-</span></div>
                         <div class="col-6"><label class="etiqueta">Tipo</label><span class="dato-valor" id="txtTipo">-</span></div>
                     </div>
@@ -128,7 +132,7 @@
                         <div class="col-6"><label class="etiqueta">CURP</label><span class="dato-valor" id="txtCurp">-</span></div>
                         <div class="col-6"><label class="etiqueta">Teléfono</label><span class="dato-valor" id="txtTel">-</span></div>
                         <div class="col-12"><label class="etiqueta">Dirección</label><span class="dato-valor" id="txtDireccion">-</span></div>
-                        <div class="col-12"><label class="etiqueta">Archivo Físico</label><span class="dato-valor" id="lblArchivoFisico">-</span></div>
+                        <!-- Archivo Físico movido arriba -->
                     </div>
 
                     <div class="seccion-titulo">SEGURIDAD SOCIAL</div>
@@ -236,7 +240,7 @@
                                             <div class="col-8"><label class="etiqueta text-start w-100">Horas Laboradas</label><input type="number" class="form-control" id="txtHorasLaboradas" placeholder="Ej: 9.5"></div>
                                             <div class="col-4"><button class="btn btn-info text-white w-100" onclick="alert('Cálculo: ' + (parseFloat(document.getElementById('txtHorasLaboradas').value||0)/8).toFixed(2))">Calcular</button></div>
                                         </div>
-                                        <div class="text-start row"><div class="col-md-6"><div class="mb-3"><label class="etiqueta text-dark fs-6 mb-1">NO. OFICIO / MEMORÁNDUM</label><input type="text" class="form-control" id="txtNumOficioExtra"></div></div><div class="col-md-6"><label class="etiqueta text-dark fs-6 mb-1">LISTA DE RAYA</label><div class="btn-scan" id="btnScanExtra" onclick="triggerFile('Extra')"><i class="bi bi-camera-fill fs-5 d-block"></i><span id="lblScanExtra">Escanear</span></div><input type="file" id="fileExtra" style="display:none" onchange="fileSelected('Extra')"></div></div>
+                                        <div class="text-start row"><div class="col-md-6"><div class="mb-3"><label class="etiqueta text-dark fs-6 mb-1">NO. OFICIO / MEMORÁNDUM</label><input type="text" class="form-control" id="txtNumOficioExtra"></div></div><div class="col-md-6"><label class="etiqueta text-dark fs-6 mb-1">LISTA DE RAYA</label><div class="btn-scan" id="btnScanExtra" onclick="triggerFile('Extra')"><i class="bi bi-camera-fill fs-5 d-block"></i><span id="lblScanExtra">Escanear</span></div><input type="file" id="fileExtra" class="input-file-oculto" accept=".pdf,image/*" onchange="fileSelected('Extra')"></div></div>
                                         <button class="btn btn-success w-100 fw-bold mt-4" onclick="guardarMov('HORAS_EXTRA', 'Extra')">REGISTRAR PAGO EXTRA</button>
                                     </div>
                                 </div>
@@ -369,7 +373,7 @@
     // IMPORTANTE: Usa las del proyecto donde configuraste CORS y Billing
     const firebaseConfig = {
       // *** PEGA AQUÍ TUS LLAVES ***
-     apiKey: "AIzaSyD0rc64cfBhBsNtJCMyDCNbc5qXv5wNlVU",
+      apiKey: "AIzaSyD0rc64cfBhBsNtJCMyDCNbc5qXv5wNlVU",
   authDomain: "nuevo-proyecto-92479.firebaseapp.com",
   projectId: "nuevo-proyecto-92479",
   storageBucket: "nuevo-proyecto-92479.firebasestorage.app",
@@ -433,22 +437,12 @@
             if(doc.exists) {
                 empleadoActual = doc.data();
                 empleadoActual.docId = doc.id;
-                cargarMovimientos(doc.id);
+                renderizarEmpleado();
+                cargarHistorial();
+                mostrarLoader(false);
             } else {
                  mostrarLoader(false);
             }
-        });
-    }
-    
-    function cargarMovimientos(id) {
-        db.collection("movimientos").where("empleadoId", "==", id).onSnapshot(qs => {
-            let movs = [];
-            qs.forEach(doc => { let d = doc.data(); d.docId = doc.id; movs.push(d); });
-            // Ordenar en cliente
-            movs.sort((a,b) => (b.fechaInicio || "").localeCompare(a.fechaInicio || ""));
-            empleadoActual.movimientos = movs;
-            renderizarEmpleado();
-            mostrarLoader(false);
         });
     }
 
@@ -534,22 +528,25 @@
         if(!tbody) return;
         tbody.innerHTML = "";
         
-        if (empleadoActual && empleadoActual.movimientos) {
-             empleadoActual.movimientos.slice(0, 10).forEach(m => {
+        db.collection("movimientos").where("empleadoId", "==", empleadoActual.id).limit(10).get().then(qs => {
+            qs.forEach(doc => {
+                const d = doc.data();
                 let link = '-';
-                if(m.urlEvidencia && m.urlEvidencia.startsWith('data:')) {
-                     link = `<button class="btn btn-sm btn-link" onclick="abrirEvidencia('${m.urlEvidencia}')"><i class="bi bi-eye"></i></button>`;
-                } else if(m.urlEvidencia) {
-                     link = `<a href="${m.urlEvidencia}" target="_blank">Ver</a>`;
+                // Soporte para URL normal de Storage o Base64
+                if(d.urlEvidencia) {
+                     link = `<button class="btn btn-sm btn-link" onclick="abrirEvidencia('${d.urlEvidencia}')"><i class="bi bi-eye"></i></button>`;
                 }
-                tbody.innerHTML += `<tr><td>${m.fechaInicio}</td><td>${m.tipo}</td><td>${m.dias}</td><td>${m.oficio}</td><td>${link}</td></tr>`;
+                tbody.innerHTML += `<tr><td>${d.fechaInicio}</td><td>${d.tipo}</td><td>${d.dias}</td><td>${d.oficio}</td><td>${link}</td></tr>`;
             });
-        }
+        });
     }
     
     window.abrirEvidencia = function(url) {
-        const win = window.open();
-        win.document.write('<iframe src="' + url + '" frameborder="0" style="border:0; top:0px; left:0px; bottom:0px; right:0px; width:100%; height:100%;" allowfullscreen></iframe>');
+        if(url.startsWith('http')) window.open(url, '_blank');
+        else {
+             const win = window.open();
+             win.document.write('<iframe src="' + url + '" frameborder="0" style="border:0; top:0px; left:0px; bottom:0px; right:0px; width:100%; height:100%;" allowfullscreen></iframe>');
+        }
     };
 
     function determinarEstatus(e) {
@@ -595,6 +592,7 @@
         mostrarLoader(true);
         try {
             // USAR BASE64 (Evita problemas de CORS sin configuración compleja)
+            // Límite seguro: 800KB
             if(file.size > 800 * 1024) {
                  mostrarLoader(false);
                  Swal.fire("Archivo muy grande", "Máximo 800KB.", "warning");

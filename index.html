@@ -3,769 +3,174 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema RH - Municipio de Navojoa</title>
+    <title>DIAGNÓSTICO V1.1 - RH NAVOJOA</title>
     
-    <!-- Bootstrap 5 & Icons -->
+    <!-- Bootstrap (Diseño básico) -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-    
-    <!-- Librerías Externas -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> <!-- Alertas -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- Gráficas -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script> <!-- Excel -->
-    
-    <!-- Firebase SDK (Compat v8) -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
-
-    <link rel="icon" href="data:,">
 
     <style>
-        :root {
-            --navojoa-tinto: #79242F;     
-            --navojoa-dorado: #C5911E;    
-            --navojoa-gris: #333333;      
-            --navojoa-perla: #f4f6f9;     
+        body { background-color: #333; color: white; font-family: monospace; padding: 20px; }
+        .status-box { padding: 20px; border-radius: 10px; margin-bottom: 20px; text-align: center; font-size: 1.5rem; font-weight: bold; border: 2px solid white; }
+        .bg-yellow { background-color: #ffc107; color: black; }
+        .bg-green { background-color: #198754; color: white; }
+        .bg-red { background-color: #dc3545; color: white; }
+        
+        #console-screen {
+            background-color: black;
+            color: #00ff00;
+            border: 1px solid #444;
+            padding: 15px;
+            height: 400px;
+            overflow-y: auto;
+            font-size: 0.9rem;
+            white-space: pre-wrap; /* Mantiene saltos de línea */
         }
-        body { background-color: var(--navojoa-perla); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 0.85rem; }
         
-        /* HEADER */
-        .header-nav { background: linear-gradient(90deg, var(--navojoa-tinto) 0%, #5a1a23 100%); color: white; padding: 15px 25px; border-bottom: 4px solid var(--navojoa-dorado); }
-        
-        /* CARDS */
-        .card { border: none; border-radius: 8px; box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.1); }
-        .card-expediente { border-top: 5px solid var(--navojoa-dorado); }
-        .card-gestion { border-top: 5px solid var(--navojoa-tinto); min-height: 850px; }
-        
-        /* DATOS */
-        .dato-valor { font-weight: 700; color: var(--navojoa-tinto); background-color: #fff; border-bottom: 2px solid #e3e6f0; border-top: none; border-left: none; border-right: none; padding: 4px 8px; display: block; width: 100%; font-size: 0.95em; }
-        .etiqueta { font-size: 0.7rem; color: #6c757d; text-transform: uppercase; font-weight: 700; margin-bottom: 2px; display: block; letter-spacing: 0.5px; }
-        
-        /* NAVEGACIÓN */
-        .nav-tabs .nav-link { color: #6c757d; font-weight: 600; cursor: pointer; border: none; } 
-        .nav-tabs .nav-link.active { color: var(--navojoa-tinto); border-bottom: 3px solid var(--navojoa-dorado); background: transparent; }
-        .btn-primary { background-color: var(--navojoa-tinto); border-color: var(--navojoa-tinto); }
-        
-        /* ESTATUS */
-        .badge-base { padding: 8px 16px; border-radius: 20px; font-size: 0.9rem; font-weight: 800; display: inline-block; text-transform: uppercase; letter-spacing: 0.5px; }
-        .estatus-activo { background-color: #198754; color: white; }
-        .estatus-baja { background-color: #dc3545; color: white; }
-        .estatus-incapacidad { background-color: #ffc107; color: #000; border: 2px solid #e0a800; animation: pulso 2s infinite; } 
-        .estatus-vacaciones { background-color: #0dcaf0; color: #000; border: 2px solid #0aa2c0; } 
-        .estatus-permiso { background-color: #6f42c1; color: white; }
-        .estatus-comision { background-color: #20c997; color: white; }
-        @keyframes pulso { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
-
-        /* UPLOAD BUTTONS */
-        .btn-scan { position: relative; width: 100%; border: 2px dashed #a0aec0; background-color: #f8f9fa; color: var(--navojoa-tinto); font-weight: bold; padding: 12px; border-radius: 6px; text-align: center; cursor: pointer; margin-top: 5px; overflow: hidden; }
-        .btn-scan:hover { background-color: #e2e6ea; border-color: var(--navojoa-tinto); }
-        .btn-scan.archivo-cargado { background-color: #d1e7dd; border-color: #198754; color: #146c43; border-style: solid; }
-        .input-file-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
-
-        /* TABLERO */
-        .saldo-box { background-color: #fff; border: 1px solid #e3e6f0; border-radius: 4px; padding: 8px; text-align: center; margin-bottom: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
-        .saldo-titulo { font-size: 0.6rem; font-weight: 800; text-transform: uppercase; display: block; color: #858796; }
-        .saldo-numero { font-size: 1.2rem; font-weight: 800; color: var(--navojoa-tinto); }
-
-        .fila-nueva { animation: highlightRow 1.5s ease-out; background-color: #d1e7dd !important; }
-        @keyframes highlightRow { 0% { background-color: #ffc107; } 100% { background-color: #d1e7dd; } }
-        
-        #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.9); z-index:9999; display:none; justify-content:center; align-items:center; flex-direction:column; }
-        .required-label::after { content: " *"; color: #dc3545; font-weight: bold; }
-        .form-section-header { background-color: #e9ecef; padding: 5px 10px; font-weight: bold; font-size: 0.8rem; color: #495057; border-radius: 4px; margin-bottom: 10px; margin-top: 15px; }
-        
-        input::-webkit-calendar-picker-indicator { opacity: 1; }
+        .error-log { color: #ff5555; font-weight: bold; border-bottom: 1px solid #555; padding-bottom: 5px; margin-bottom: 5px; display: block; }
     </style>
+
+    <!-- 1. TRAMPA DE ERRORES GLOBAL (Debe ir antes de todo) -->
+    <script>
+        window.onerror = function(message, source, lineno, colno, error) {
+            const screen = document.getElementById('console-screen');
+            if(screen) {
+                screen.innerHTML += `<div class="error-log">💥 ERROR FATAL: ${message}\nEn: ${source}:${lineno}</div>`;
+            }
+            const status = document.getElementById('main-status');
+            if(status) {
+                status.className = "status-box bg-red";
+                status.innerText = "SISTEMA DETENIDO POR ERROR";
+            }
+            // No bloquear el navegador
+            return false; 
+        };
+    </script>
 </head>
 <body>
 
-<div id="loader">
-    <div class="spinner-border text-danger" role="status" style="width: 3rem; height: 3rem;"></div>
-    <div class="mt-2 fw-bold text-dark">Procesando solicitud...</div>
-</div>
+<div class="container">
+    <h3 class="mb-4 text-center">PANEL DE DIAGNÓSTICO FORENSE</h3>
 
-<div class="header-nav d-flex justify-content-between align-items-center">
-    <div class="d-flex align-items-center">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/9/99/Escudo_Navojoa.png" alt="Escudo" style="height: 50px; margin-right: 15px;">
-        <div>
-            <h4 class="m-0 fw-bold">MUNICIPIO DE NAVOJOA</h4>
-            <small>DIRECCIÓN DE RECURSOS HUMANOS</small>
-        </div>
+    <!-- INDICADOR DE ESTADO -->
+    <div id="main-status" class="status-box bg-yellow">
+        INICIANDO MOTORES...
     </div>
-    <div class="d-flex align-items-center">
-        <div class="text-end me-3 d-none d-md-block">
-            <span class="d-block fw-bold" id="fechaSistema"></span>
-            <span class="badge bg-warning text-dark border border-white">v52.0 FULL</span>
-        </div>
-        <button class="btn btn-outline-light rounded-circle" onclick="location.reload()"><i class="bi bi-arrow-clockwise"></i></button>
+
+    <div class="d-grid gap-2 mb-4">
+        <button class="btn btn-light btn-lg fw-bold" onclick="iniciarDiagnostico()">▶ FORZAR INICIO MANUAL</button>
     </div>
-</div>
 
-<div class="container-fluid mt-4">
-    <div class="row">
-        <!-- COLUMNA IZQUIERDA: PERFIL Y TABLERO -->
-        <div class="col-lg-4 mb-4">
-            <div class="input-group mb-3 shadow-sm">
-                <span class="input-group-text border-0 bg-white"><i class="bi bi-search text-danger"></i></span>
-                <input type="text" class="form-control border-0" id="txtBuscarID" list="listaSugerencias" placeholder="Buscar por Nombre o ID..." oninput="buscarPredictivo()" onkeydown="if(event.key==='Enter') seleccionarSugerencia()">
-                <datalist id="listaSugerencias"></datalist>
-                <button class="btn btn-primary" onclick="seleccionarSugerencia()">CONSULTAR</button>
-            </div>
-
-            <div class="card card-expediente h-100">
-                <div class="card-body">
-                    <div class="text-center mb-4">
-                        <div class="foto-perfil"><i class="bi bi-person-fill fs-1 text-secondary"></i></div>
-                        <h5 class="fw-bold text-dark mb-1" id="lblNombre">---</h5>
-                        <div class="mb-2"><span class="badge bg-dark" id="lblID">ID: ---</span></div>
-                        <div id="contenedorEstatus" class="mt-3">
-                            <span class="badge-base estatus-activo" id="lblStatusDinamico">ACTIVO</span>
-                        </div>
-                    </div>
-
-                    <div class="seccion-titulo">DATOS PRINCIPALES</div>
-                    <div class="row g-2">
-                        <div class="col-12"><label class="etiqueta">Departamento</label><span class="dato-valor" id="txtDepto">-</span></div>
-                        <div class="col-12"><label class="etiqueta">Puesto</label><span class="dato-valor" id="txtPuesto">-</span></div>
-                        <div class="col-6"><label class="etiqueta">Fecha Alta</label><span class="dato-valor" id="txtAlta">-</span></div>
-                        <div class="col-6"><label class="etiqueta">Antigüedad</label><span class="dato-valor" id="txtAntiguedad">-</span></div>
-                        <div class="col-6"><label class="etiqueta">Nómina</label><span class="dato-valor" id="txtEmpresa">-</span></div>
-                        <div class="col-6"><label class="etiqueta">Tipo</label><span class="dato-valor" id="txtTipo">-</span></div>
-                    </div>
-
-                    <div class="seccion-titulo">TABLERO DE CONTROL (ANUAL)</div>
-                    <div class="row g-1 bg-light p-2 rounded text-center">
-                        <div class="col-6"><div class="saldo-box" style="border-left: 3px solid var(--navojoa-tinto);"><span class="saldo-titulo">VACACIONES</span><span class="saldo-numero" id="lblSaldoVac">0</span><span class="saldo-sub" id="lblDerechoVac">Der: 0</span></div></div>
-                        <div class="col-6"><div class="saldo-box" style="border-left: 3px solid var(--navojoa-dorado);"><span class="saldo-titulo">DÍAS ECON.</span><span class="saldo-numero" id="lblSaldoEcon">0</span><span class="saldo-sub">Max: 2</span></div></div>
-                        
-                        <div class="col-3"><div class="saldo-box"><span class="saldo-titulo">P.S.G.</span><span class="saldo-numero" id="lblSaldoPSG">0</span></div></div>
-                        <div class="col-3"><div class="saldo-box"><span class="saldo-titulo">INCAP.</span><span class="saldo-numero" id="lblSaldoIncap">0</span></div></div>
-                        <div class="col-3"><div class="saldo-box"><span class="saldo-titulo">LUTO</span><span class="saldo-numero" id="lblAcumLuto">0</span></div></div>
-                        <div class="col-3"><div class="saldo-box"><span class="saldo-titulo text-primary">COMISIÓN</span><span class="saldo-numero text-primary" id="lblAcumComisiones">0</span></div></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- COLUMNA DERECHA: GESTIÓN -->
-        <div class="col-lg-8 mb-4">
-            <div class="card card-gestion">
-                <div class="card-header bg-white">
-                    <ul class="nav nav-tabs card-header-tabs" id="myTab" role="tablist">
-                        <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#incidencias">Incidencias</button></li>
-                        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#extras">Extras</button></li>
-                        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#alta">Alta Nueva</button></li>
-                        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#datos">Editar Datos</button></li>
-                        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#reportes">Reportes</button></li>
-                        <li class="nav-item ms-auto"><button class="nav-link text-danger fw-bold" data-bs-toggle="tab" data-bs-target="#baja">ESTATUS</button></li>
-                    </ul>
-                </div>
-                <div class="card-body bg-white">
-                    <div class="tab-content">
-                        
-                        <!-- INCIDENCIAS -->
-                        <div class="tab-pane fade show active" id="incidencias">
-                            <div class="row g-3">
-                                <!-- VACACIONES -->
-                                <div class="col-md-4">
-                                    <div class="card h-100 border shadow-sm p-3">
-                                        <div class="fw-bold mb-2 text-danger">VACACIONES</div>
-                                        <select class="form-select form-select-sm mb-2" id="cmbTipoVac"><option>DISFRUTE</option><option>PAGO</option><option>CANCELACION</option></select>
-                                        <input type="number" class="form-control form-control-sm mb-2" id="txtDiasVac" placeholder="Días" oninput="calcFechas('Vac','H')">
-                                        <div class="row g-1"><div class="col-6"><input type="date" class="form-control form-control-sm" id="txtFechaVac" onchange="calcFechas('Vac','H')"></div><div class="col-6"><input type="date" class="form-control form-control-sm input-calc" id="txtFechaFinVac" readonly></div></div>
-                                        <input type="text" class="form-control form-control-sm mt-2" id="txtNumOficioVac" placeholder="No. Oficio">
-                                        <div class="btn-scan mt-2" id="btnScanVac"><span>Adjuntar Oficio</span><input type="file" id="fileVac" class="input-file-overlay" onchange="fileSelected('Vac')"></div>
-                                        <button class="btn btn-primary btn-sm w-100 mt-3" onclick="guardarMov('VACACIONES', 'Vac')">GUARDAR</button>
-                                    </div>
-                                </div>
-                                <!-- INCAPACIDAD -->
-                                <div class="col-md-4">
-                                    <div class="card h-100 border shadow-sm p-3">
-                                        <div class="fw-bold mb-2 text-warning">INCAPACIDAD</div>
-                                        <select class="form-select form-select-sm mb-2" id="cmbTipoIncap"><option>ENFERMEDAD GENERAL</option><option>RIESGO TRABAJO</option><option>MATERNIDAD</option></select>
-                                        <input type="number" class="form-control form-control-sm mb-2" id="txtDiasIncap" placeholder="Días" oninput="calcFechas('Incap','N')">
-                                        <div class="row g-1"><div class="col-6"><input type="date" class="form-control form-control-sm" id="txtFechaIncap" onchange="calcFechas('Incap','N')"></div><div class="col-6"><input type="date" class="form-control form-control-sm input-calc" id="txtFechaFinIncap" readonly></div></div>
-                                        <input type="text" class="form-control form-control-sm mt-2" id="txtNumOficioIncap" placeholder="Folio Médico">
-                                        <div class="btn-scan mt-2" id="btnScanIncap"><span>Adjuntar Incap.</span><input type="file" id="fileIncap" class="input-file-overlay" onchange="fileSelected('Incap')"></div>
-                                        <button class="btn btn-warning btn-sm w-100 mt-3" onclick="guardarMov('INCAPACIDAD', 'Incap')">GUARDAR</button>
-                                    </div>
-                                </div>
-                                <!-- PERMISOS -->
-                                <div class="col-md-4">
-                                    <div class="card h-100 border shadow-sm p-3">
-                                        <div class="fw-bold mb-2 text-primary">PERMISOS</div>
-                                        <select class="form-select form-select-sm mb-2" id="cmbTipoPermiso">
-                                            <option value="PCG_ECONOMICO">PCG - Económico</option>
-                                            <option value="PCG_LUTO">PCG - Luto/Nacim.</option>
-                                            <option value="PSG">PSG - Sin Goce</option>
-                                            <option value="COMISION">COMISIÓN OFICIAL</option>
-                                            <option value="JUSTIFICANTE_FALTA">JUSTIFICANTE (FALTA)</option>
-                                        </select>
-                                        <input type="number" class="form-control form-control-sm mb-2" id="txtDiasPermiso" placeholder="Días" oninput="calcFechas('Permiso','H')">
-                                        <div class="row g-1"><div class="col-6"><input type="date" class="form-control form-control-sm" id="txtFechaPermiso" onchange="calcFechas('Permiso','H')"></div><div class="col-6"><input type="date" class="form-control form-control-sm input-calc" id="txtFechaFinPermiso" readonly></div></div>
-                                        <input type="text" class="form-control form-control-sm mt-2" id="txtNumOficioPermiso" placeholder="No. Oficio">
-                                        <div class="btn-scan mt-2" id="btnScanPermiso"><span>Adjuntar Justif.</span><input type="file" id="filePermiso" class="input-file-overlay" onchange="fileSelected('Permiso')"></div>
-                                        <button class="btn btn-dark btn-sm w-100 mt-3" onclick="guardarPermiso()">GUARDAR</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                         <!-- TAB 2: EXTRAS (HORAS EXTRA) -->
-                         <div class="tab-pane fade" id="extras">
-                            <div class="row justify-content-center pt-4">
-                                <div class="col-md-8 text-center">
-                                    <div class="card border-0 shadow-sm p-4">
-                                        <i class="bi bi-stopwatch fs-1 text-info mb-3"></i>
-                                        <h4 class="fw-bold" style="color: var(--navojoa-tinto);">Calculadora de Turnos</h4>
-                                        <div class="row mb-3 align-items-end">
-                                            <div class="col-8"><label class="etiqueta text-start w-100">Horas Laboradas</label><input type="number" class="form-control" id="txtHorasLaboradas" placeholder="Ej: 9.5"></div>
-                                            <div class="col-4"><button class="btn btn-info text-white w-100" onclick="alert('Funcionalidad de cálculo simple activa')">Calcular</button></div>
-                                        </div>
-                                        <div class="text-start row"><div class="col-md-6"><div class="mb-3"><label class="etiqueta text-dark fs-6 mb-1">NO. OFICIO / MEMORÁNDUM</label><input type="text" class="form-control" id="txtNumOficioExtra"></div></div><div class="col-md-6"><label class="etiqueta text-dark fs-6 mb-1">LISTA DE RAYA</label><div class="btn-scan" id="btnScanExtra"><span>Adjuntar</span><input type="file" id="fileExtra" class="input-file-overlay" onchange="fileSelected('Extra')"></div></div></div>
-                                        <button class="btn btn-success w-100 fw-bold mt-4" onclick="guardarMov('HORAS_EXTRA', 'Extra')">REGISTRAR PAGO EXTRA</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- ALTA -->
-                        <div class="tab-pane fade" id="alta">
-                             <div class="card border-0 p-3">
-                                <form id="formAlta">
-                                    <div class="form-section-header">DATOS PERSONALES</div>
-                                    <div class="row g-2 mb-2">
-                                        <div class="col-3"><label class="etiqueta required-label">ID</label><input type="text" class="form-control" id="altaID"></div>
-                                        <div class="col-6"><label class="etiqueta required-label">Nombre</label><input type="text" class="form-control" id="altaNombre"></div>
-                                        <div class="col-3"><label class="etiqueta required-label">Fecha Alta</label><input type="date" class="form-control" id="altaFecha"></div>
-                                    </div>
-                                    <div class="row g-2 mb-2">
-                                        <div class="col-6"><label class="etiqueta">Dirección</label><input type="text" class="form-control" id="altaDireccion"></div>
-                                        <div class="col-3"><label class="etiqueta">Teléfono</label><input type="text" class="form-control" id="altaTel"></div>
-                                        <div class="col-3"><label class="etiqueta">CURP</label><input type="text" class="form-control" id="altaCurp"></div>
-                                    </div>
-                                    
-                                    <div class="form-section-header">DATOS LABORALES</div>
-                                    <div class="row g-2 mb-2">
-                                        <div class="col-4"><label class="etiqueta">Depto</label><select id="altaDepto" class="form-select"><option>PRESIDENCIA</option><option>OBRAS PUBLICAS</option><option>DIF</option><option>SEGURIDAD</option><option>TESORERIA</option></select></div>
-                                        <div class="col-4"><label class="etiqueta">Puesto</label><input type="text" class="form-control" id="altaPuesto"></div>
-                                        <div class="col-4"><label class="etiqueta">Tipo</label><select id="altaTipo" class="form-select"><option>CONFIANZA</option><option>SINDICALIZADO</option><option>EVENTUAL</option></select></div>
-                                    </div>
-                                    <div class="row g-2 mb-2">
-                                        <div class="col-4"><label class="etiqueta required-label">Nombramiento</label><input type="text" class="form-control" id="txtNumOficioAlta"></div>
-                                        <div class="col-4"><label class="etiqueta">Empresa</label><select id="altaEmpresa" class="form-select"><option>AYTO</option><option>DIF</option></select></div>
-                                        <div class="col-4"><label class="etiqueta">Archivo Físico</label><input type="text" class="form-control" id="altaNumArchivo"></div>
-                                    </div>
-
-                                    <div class="form-section-header">DATOS BANCARIOS Y SS</div>
-                                    <div class="row g-2 mb-2">
-                                        <div class="col-4"><label class="etiqueta">Seguro</label><select id="altaSeguro" class="form-select"><option>ISSSTESON</option><option>IMSS</option></select></div>
-                                        <div class="col-4"><label class="etiqueta">Póliza</label><input type="text" class="form-control" id="altaPoliza"></div>
-                                        <div class="col-4"><label class="etiqueta">Banco</label><input type="text" class="form-control" id="altaBanco"></div>
-                                    </div>
-                                    <div class="row g-2 mb-2">
-                                        <div class="col-6"><label class="etiqueta">Cuenta</label><input type="text" class="form-control" id="altaCuenta"></div>
-                                        <div class="col-6"><label class="etiqueta">Clabe</label><input type="text" class="form-control" id="altaClabe"></div>
-                                    </div>
-
-                                    <div class="mt-3 p-3 bg-light border rounded">
-                                         <label class="etiqueta text-danger fw-bold">CONTRATO / NOMBRAMIENTO (PDF/FOTO) *</label>
-                                         <div class="btn-scan" id="btnScanAlta"><span>Seleccionar Archivo</span><input type="file" id="fileAlta" class="input-file-overlay" onchange="fileSelected('Alta')"></div>
-                                    </div>
-                                    <button type="button" class="btn btn-success fw-bold px-5 mt-4 w-100" onclick="registrarAlta()">REGISTRAR ALTA</button>
-                                </form>
-                            </div>
-                        </div>
-                        
-                        <!-- DATOS (Edición Completa) -->
-                         <div class="tab-pane fade" id="datos">
-                            <div class="card border-0 p-3">
-                                <form id="formEdicion">
-                                    <!-- Identificación -->
-                                    <div class="form-section-header">IDENTIFICACIÓN (PROTEGIDO)</div>
-                                    <div class="row g-2 mb-2">
-                                        <div class="col-3"><label class="etiqueta">ID</label><input type="text" class="form-control input-calc" id="editID" readonly></div>
-                                        <div class="col-6"><label class="etiqueta">Nombre</label><input type="text" class="form-control input-calc" id="editNombre" readonly></div>
-                                        <div class="col-3"><label class="etiqueta">F. Alta</label><input type="date" class="form-control input-calc" id="editFechaAlta" readonly></div>
-                                    </div>
-                                    <!-- Generales -->
-                                    <div class="form-section-header">DATOS GENERALES</div>
-                                    <div class="row g-2 mb-2">
-                                        <div class="col-6"><label class="etiqueta">Dirección</label><input type="text" class="form-control" id="editDireccion"></div>
-                                        <div class="col-3"><label class="etiqueta">Teléfono</label><input type="text" class="form-control" id="editTel"></div>
-                                        <div class="col-3"><label class="etiqueta">CURP</label><input type="text" class="form-control" id="editCurp"></div>
-                                    </div>
-                                    <!-- Laborales -->
-                                    <div class="form-section-header">DATOS LABORALES</div>
-                                    <div class="row g-2 mb-2">
-                                        <div class="col-4"><label class="etiqueta">Depto</label><select id="editDepto" class="form-select"><option>PRESIDENCIA</option><option>OBRAS PUBLICAS</option><option>DIF</option><option>SEGURIDAD</option><option>TESORERIA</option></select></div>
-                                        <div class="col-4"><label class="etiqueta">Puesto</label><input type="text" class="form-control" id="editPuesto"></div>
-                                        <div class="col-4"><label class="etiqueta">Tipo</label><select id="editTipo" class="form-select"><option>CONFIANZA</option><option>SINDICALIZADO</option><option>EVENTUAL</option></select></div>
-                                    </div>
-                                    <div class="row g-2 mb-2">
-                                        <div class="col-4"><label class="etiqueta">Nombramiento</label><input type="text" class="form-control" id="editNombramiento"></div>
-                                        <div class="col-4"><label class="etiqueta">Empresa</label><select id="editEmpresa" class="form-select"><option>AYTO</option><option>DIF</option></select></div>
-                                        <div class="col-4"><label class="etiqueta">Archivo</label><input type="text" class="form-control" id="editArchivo"></div>
-                                    </div>
-                                    <!-- Bancarios -->
-                                    <div class="form-section-header">BANCARIOS Y SS</div>
-                                    <div class="row g-2 mb-2">
-                                        <div class="col-4"><label class="etiqueta">Seguro</label><select id="editSeguro" class="form-select"><option>ISSSTESON</option><option>IMSS</option></select></div>
-                                        <div class="col-4"><label class="etiqueta">Póliza</label><input type="text" class="form-control" id="editPoliza"></div>
-                                        <div class="col-4"><label class="etiqueta">Banco</label><input type="text" class="form-control" id="editBanco"></div>
-                                    </div>
-                                    <div class="row g-2 mb-2">
-                                        <div class="col-6"><label class="etiqueta">Cuenta</label><input type="text" class="form-control" id="editCuenta"></div>
-                                        <div class="col-6"><label class="etiqueta">Clabe</label><input type="text" class="form-control" id="editClabe"></div>
-                                    </div>
-                                    <button type="button" class="btn btn-primary w-100 mt-3" onclick="actualizarDatos()">GUARDAR CAMBIOS</button>
-                                </form>
-                            </div>
-                         </div>
-                        
-                        <!-- REPORTES -->
-                        <div class="tab-pane fade" id="reportes">
-                            <div class="card border-0 p-3">
-                                <div class="row g-2">
-                                    <div class="col-3"><label>Inicio</label><input type="date" class="form-control" id="repFechaIni"></div>
-                                    <div class="col-3"><label>Fin</label><input type="date" class="form-control" id="repFechaFin"></div>
-                                    <div class="col-3"><label>Empleado</label><input type="text" class="form-control" id="repEmpleado" placeholder="Nombre/ID"></div>
-                                    <div class="col-3"><br><button class="btn btn-primary w-100" onclick="generarReporte()">BUSCAR</button></div>
-                                </div>
-                                <div class="d-flex justify-content-between mt-3">
-                                    <span id="repContador" class="fw-bold">Resultados: 0</span>
-                                    <button class="btn btn-success btn-sm" onclick="descargarExcel()"><i class="bi bi-file-excel"></i> DESCARGAR EXCEL</button>
-                                </div>
-                                <div class="table-responsive mt-2" style="max-height: 300px;"><table class="table table-sm table-hover"><thead class="table-dark"><tr><th>Fecha</th><th>Empleado</th><th>Tipo</th><th>Días</th><th>Oficio</th></tr></thead><tbody id="tablaReportesBody"></tbody></table></div>
-                            </div>
-                        </div>
-
-                         <!-- ESTATUS/BAJA -->
-                         <div class="tab-pane fade" id="baja">
-                            <div class="p-4 text-center">
-                                <h5>Gestión de Estatus</h5>
-                                <select class="form-select mb-3 w-50 mx-auto" id="cmbNuevoEstatus"><option>BAJA</option><option>JUBILADO</option><option>PENSIONADO</option><option>SUSPENDIDO</option><option>ACTIVO</option></select>
-                                <div class="btn-scan w-50 mx-auto mb-3" id="btnScanBaja"><span>Adjuntar Renuncia/Acta</span><input type="file" id="fileBaja" class="input-file-overlay" onchange="fileSelected('Baja')"></div>
-                                <button class="btn btn-dark w-50" onclick="actualizarEstatus()">APLICAR CAMBIO</button>
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
-            </div>
-
-            <!-- HISTORIAL -->
-            <div class="card shadow mt-3">
-                <div class="card-header py-1 bg-dark text-white d-flex justify-content-between"><small>HISTORIAL</small></div>
-                <div class="card-body p-0 table-responsive"><table class="table table-sm mb-0 text-center" style="font-size:0.85rem;"><thead class="table-secondary"><tr><th>Fecha</th><th>Tipo</th><th>Días</th><th>Oficio</th><th>Evidencia</th></tr></thead><tbody id="tablaHistorial"></tbody></table></div>
-            </div>
+    <!-- PANTALLA NEGRA DE LOGS -->
+    <div class="card bg-dark border-secondary">
+        <div class="card-header border-secondary text-white">Registro de Operaciones (Logs)</div>
+        <div class="card-body p-0">
+            <div id="console-screen">Esperando carga de librerías...<br></div>
         </div>
     </div>
 </div>
+
+<!-- 2. LIBRERÍAS FIREBASE (CDN ALTERNATIVO MÁS ESTABLE) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/8.10.1/firebase-app.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/8.10.1/firebase-firestore.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/8.10.1/firebase-storage.js"></script>
 
 <script>
-    // --- CONFIGURACIÓN DE FIREBASE (TUYAS) ---
+    // Función para escribir en la pantalla negra
+    function log(msg) {
+        const screen = document.getElementById('console-screen');
+        const time = new Date().toLocaleTimeString();
+        screen.innerHTML += `[${time}] ${msg}<br>`;
+        screen.scrollTop = screen.scrollHeight;
+    }
+
+    function ok(msg) {
+        const screen = document.getElementById('console-screen');
+        screen.innerHTML += `<span style="color:cyan">✔ ${msg}</span><br>`;
+    }
+
+    // --- CONFIGURACIÓN FIREBASE ---
     const firebaseConfig = {
       apiKey: "AIzaSyCAylvD_RQ6Z2ZtaUP2ONWe4qVYod9LECo",
       authDomain: "rh-navojoa.firebaseapp.com",
       projectId: "rh-navojoa",
-      storageBucket: "rh-navojoa.firebasestorage.app", // BUCKET CORRECTO
+      storageBucket: "rh-navojoa.firebasestorage.app",
       messagingSenderId: "938217771194",
       appId: "1:938217771194:web:f620e8987e714a9f177283"
     };
 
-    // INICIALIZACIÓN Y VARIABLES GLOBALES
-    let db, storage, empleadoActual = null, fileCache = {}, debounceTimer;
+    function iniciarDiagnostico() {
+        log("-------------------------------------");
+        log("Iniciando secuencia de prueba...");
 
-    // FUNCIONES UTILERIAS (AL PRINCIPIO PARA EVITAR ERRORES)
-    function mostrarLoader(show) { 
-        const l = document.getElementById('loader'); 
-        if(l) l.style.display = show ? 'flex' : 'none'; 
-    }
-    
-    function validarSesion() { 
-        if(!empleadoActual) { Swal.fire("Error", "Busca un empleado primero", "warning"); return false; } 
-        return true; 
-    }
-
-    function initApp() {
-        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-        db = firebase.firestore();
-        storage = firebase.storage();
-        console.log("Firebase OK");
-        mostrarLoader(false);
-    }
-
-    // --- FUNCIÓN DE SUBIDA MAESTRA (STORAGE REAL) ---
-    async function subirArchivoStorage(file, path) {
-        try {
-            const ref = storage.ref().child(path);
-            const snapshot = await ref.put(file);
-            return await snapshot.ref.getDownloadURL();
-        } catch (error) {
-            console.warn("Fallo subida a Storage (CORS/Permisos). Guardando sin archivo.");
-            // Si falla Storage, devolvemos null pero NO rompemos el flujo.
-            return null; 
+        // 1. Verificar si Firebase se descargó
+        if (typeof firebase === 'undefined') {
+            log("❌ ERROR CRÍTICO: La librería 'firebase' no existe. El navegador bloqueó la descarga.");
+            document.getElementById('main-status').className = "status-box bg-red";
+            document.getElementById('main-status').innerText = "ERROR DE RED (LIBRERÍAS)";
+            return;
         }
-    }
+        ok("Librerías Firebase detectadas.");
 
-    // --- BUSCADOR ---
-    function buscarPredictivo() {
-        clearTimeout(debounceTimer);
-        const texto = document.getElementById('txtBuscarID').value.trim().toUpperCase();
-        const datalist = document.getElementById('listaSugerencias');
-        if(texto.length < 1) { datalist.innerHTML = ""; return; }
-        
-        debounceTimer = setTimeout(() => {
-            datalist.innerHTML = ""; 
-            db.collection("empleados").where("nombre", ">=", texto).where("nombre", "<=", texto + "\uf8ff").limit(5).get()
-            .then(sn => sn.forEach(doc => {
-                const opt = document.createElement('option'); opt.value = `${doc.data().id} - ${doc.data().nombre}`; datalist.appendChild(opt);
-            }));
-        }, 300);
-    }
-    
-    function seleccionarSugerencia() {
-         let val = document.getElementById('txtBuscarID').value;
-         if(val.includes(" - ")) document.getElementById('txtBuscarID').value = val.split(" - ")[0]; 
-         buscarEmpleado();
-    }
-
-    function buscarEmpleado() {
-        const busqueda = document.getElementById('txtBuscarID').value.trim().toUpperCase();
-        if(!busqueda) return;
-        mostrarLoader(true);
-        // Desuscribir previos si hubiera (simplificado)
-        
-        db.collection("empleados").doc(busqueda).onSnapshot(doc => {
-            if(doc.exists) {
-                empleadoActual = doc.data();
-                empleadoActual.docId = doc.id;
-                cargarMovimientos(doc.id);
+        try {
+            // 2. Inicializar App
+            if (!firebase.apps.length) {
+                firebase.initializeApp(firebaseConfig);
+                ok("App Firebase Inicializada.");
             } else {
-                mostrarLoader(false); Swal.fire('No encontrado', 'Verifique el ID', 'error');
-            }
-        });
-    }
-    
-    function cargarMovimientos(id) {
-        db.collection("movimientos").where("empleadoId", "==", id).onSnapshot(qs => {
-            let movs = [];
-            qs.forEach(doc => { let d = doc.data(); d.docId = doc.id; movs.push(d); });
-            // Ordenar en cliente
-            movs.sort((a,b) => (b.fechaInicio || "").localeCompare(a.fechaInicio || ""));
-            empleadoActual.movimientos = movs;
-            renderizarEmpleado();
-            mostrarLoader(false);
-        });
-    }
-
-    function renderizarEmpleado() {
-        if(!empleadoActual) return;
-        const e = empleadoActual;
-        document.getElementById('lblNombre').innerText = e.nombre;
-        document.getElementById('lblID').innerText = "ID: " + e.id;
-        document.getElementById('lblArchivoFisico').innerText = "ARCH: " + (e.numArchivo || "N/A");
-        
-        // Datos Ficha
-        document.getElementById('txtDepto').innerText = e.depto || "-";
-        document.getElementById('txtPuesto').innerText = e.puesto || "-";
-        document.getElementById('txtAlta').innerText = e.fechaAlta || "-";
-        document.getElementById('txtEmpresa').innerText = e.empresa || "-";
-        document.getElementById('txtTipo').innerText = e.tipo || "-";
-        
-        // Llenado de Edición
-        document.getElementById('editID').value = e.id;
-        document.getElementById('editNombre').value = e.nombre;
-        document.getElementById('editFechaAlta').value = e.fechaAlta || "";
-        document.getElementById('editDepto').value = e.depto || "";
-        document.getElementById('editPuesto').value = e.puesto || "";
-        document.getElementById('editEmpresa').value = e.empresa || "";
-        document.getElementById('editTipo').value = e.tipo || "";
-        document.getElementById('editNombramiento').value = e.oficioAlta || "";
-        document.getElementById('editArchivo').value = e.numArchivo || "";
-        document.getElementById('editDireccion').value = e.direccion || "";
-        document.getElementById('editTel').value = e.tel || "";
-        document.getElementById('editCurp').value = e.curp || "";
-        document.getElementById('editSeguro').value = e.seguro || "";
-        document.getElementById('editPoliza').value = e.poliza || "";
-        document.getElementById('editBanco').value = e.banco || "";
-        document.getElementById('editCuenta').value = e.cuenta || "";
-        document.getElementById('editClabe').value = e.clabe || "";
-        
-        // Datos Personales Vista
-        document.getElementById('txtCurp').innerText = e.curp || "";
-        document.getElementById('txtTel').innerText = e.tel || "";
-        document.getElementById('txtDireccion').innerText = e.direccion || "";
-        document.getElementById('txtSeguro').innerText = e.seguro || "";
-        document.getElementById('txtPoliza').innerText = e.poliza || "";
-        document.getElementById('txtBanco').innerText = e.banco || "";
-        document.getElementById('txtCuenta').innerText = e.cuenta || "";
-
-        // Saldos (Vienen directos del Doc en tiempo real)
-        document.getElementById('lblSaldoVac').innerText = e.saldoVac || 0;
-        document.getElementById('lblSaldoEcon').innerText = e.saldoEcon || 0;
-        document.getElementById('lblSaldoPSG').innerText = `${e.saldoPSG || 0} / 45`;
-        document.getElementById('lblSaldoIncap').innerText = e.saldoIncap || 0;
-        document.getElementById('lblAcumLuto').innerText = e.acumuladoLuto || 0;
-        document.getElementById('lblAcumComisiones').innerText = e.acumuladoComisiones || 0;
-        
-        // Antigüedad y Der. Vacaciones
-        if(e.fechaAlta) {
-            const hoy = new Date();
-            // Compatibilidad con String o Timestamp
-            let fa = e.fechaAlta;
-            if(fa && fa.toDate) fa = fa.toDate();
-            else fa = new Date(fa);
-
-            const anti = Math.abs(hoy - fa) / (1000 * 60 * 60 * 24 * 365.25);
-            document.getElementById('txtAntiguedad').innerText = anti.toFixed(1) + " Años";
-            let der = 10 + Math.floor(anti/5);
-            document.getElementById('lblDerechoVac').innerText = `Der: ${der}`;
-        }
-        
-        // Estatus y Historial
-        const st = determinarEstatus(e);
-        const badge = document.getElementById('lblStatusDinamico');
-        badge.innerText = st.texto; badge.className = "badge-base " + st.clase;
-        
-        const tbody = document.getElementById('tablaHistorial');
-        tbody.innerHTML = "";
-        e.movimientos.slice(0, 10).forEach(m => {
-            const link = m.urlEvidencia ? `<a href="${m.urlEvidencia}" target="_blank" class="btn btn-sm btn-link"><i class="bi bi-eye"></i></a>` : '-';
-            tbody.innerHTML += `<tr><td>${m.fechaInicio}</td><td>${m.tipo}</td><td>${m.dias}</td><td>${m.oficio}</td><td>${link}</td></tr>`;
-        });
-    }
-
-    function determinarEstatus(e) {
-        if(e.estatus !== 'ACTIVO') return { texto: e.estatus, clase: 'estatus-' + e.estatus.toLowerCase().split(' ')[0] };
-        // Buscar incidencias hoy
-        const hoy = new Date().toISOString().split('T')[0];
-        if(e.movimientos) {
-            const mov = e.movimientos.find(m => hoy >= m.fechaInicio && hoy <= m.fechaFin);
-            if(mov) {
-                if(mov.tipo.includes('VAC')) return { texto: 'VACACIONES', clase: 'estatus-vacaciones' };
-                if(mov.tipo.includes('INCAP')) return { texto: 'INCAPACITADO', clase: 'estatus-incapacidad' };
-                if(mov.tipo.includes('PERMISO')) return { texto: 'PERMISO', clase: 'estatus-permiso' };
-            }
-        }
-        return { texto: 'ACTIVO', clase: 'estatus-activo' };
-    }
-
-    // --- GUARDAR MOVIMIENTOS (INCIDENCIAS) ---
-    async function guardarMov(tipo, sufijo) {
-        if(!validarSesion()) return;
-        const dias = parseFloat(document.getElementById('txtDias'+sufijo).value) || 0;
-        const oficio = document.getElementById('txtNumOficio'+sufijo).value;
-        const fileInput = document.getElementById('file' + sufijo);
-        const file = fileInput.files[0];
-        
-        if(!file || !oficio) { Swal.fire("Faltan Datos", "Oficio y Archivo obligatorios", "warning"); return; }
-        
-        // VALIDACIONES NEGOCIO
-        if(tipo === 'VACACIONES') {
-             if(dias > (empleadoActual.saldoVac||0) && document.getElementById('cmbTipoVac').value !== 'CANCELACION') {
-                 Swal.fire("Saldo Insuficiente", "", "error"); return; 
-             }
-        }
-        if(tipo === 'INCAPACIDAD') {
-             // Art 100 Warning (Simplificado)
-             if((empleadoActual.saldoIncap||0) + dias > 60) {
-                 if(!confirm("ALERTA ART. 100: Excede 60 días anuales. ¿Continuar?")) return;
-             }
-        }
-        if(sufijo === 'Permiso' && document.getElementById('cmbTipoPermiso').value.includes('PCG')) {
-            if(empleadoActual.tipo !== 'SINDICALIZADO') { Swal.fire("Denegado", "Solo sindicalizados", "error"); return; }
-        }
-
-        mostrarLoader(true);
-        try {
-            // Intentar Storage
-            const path = `evidencias/${empleadoActual.id}/${Date.now()}_${file.name}`;
-            const ref = storage.ref().child(path);
-            let url = "";
-            try {
-                await ref.put(file);
-                url = await ref.getDownloadURL();
-            } catch(err) {
-                console.warn("Storage falló (CORS?), intentando guardar sin archivo para no perder datos.");
-                alert("Advertencia: El archivo no se subió (Error CORS). Se guardará el registro.");
+                log("App ya estaba inicializada.");
             }
 
-            const mov = {
-                empleadoId: empleadoActual.id, nombreEmpleado: empleadoActual.nombre,
-                tipo: tipo, dias: dias, oficio: oficio,
-                fechaInicio: document.getElementById('txtFecha'+sufijo).value,
-                fechaFin: document.getElementById('txtFechaFin'+sufijo).value,
-                urlEvidencia: url || "", fechaRegistro: firebase.firestore.FieldValue.serverTimestamp()
-            };
-            
-            await db.collection("movimientos").add(mov);
-            
-            // Actualizar Saldo
-            let upd = {};
-            if(tipo === 'VACACIONES') upd = { saldoVac: (empleadoActual.saldoVac||0) - dias };
-            if(tipo === 'INCAPACIDAD') upd = { saldoIncap: (empleadoActual.saldoIncap||0) + dias };
-            // ... resto de lógica de saldos ...
-            
-            if(Object.keys(upd).length > 0) await db.collection("empleados").doc(empleadoActual.docId).update(upd);
-            
-            mostrarLoader(false);
-            Swal.fire("Éxito", "", "success");
-            resetForm(sufijo);
+            // 3. Conectar Servicios
+            const db = firebase.firestore();
+            const storage = firebase.storage();
+            ok("Servicios (DB y Storage) vinculados.");
 
-        } catch(e) { mostrarLoader(false); Swal.fire("Error", e.message, "error"); }
-    }
-    
-    // Wrapper functions
-    function guardarVacaciones() { guardarMov('VACACIONES', 'Vac'); }
-    function guardarIncapacidad() { guardarMov('INCAPACIDAD', 'Incap'); }
-    function guardarPermiso() { 
-        const tipo = document.getElementById('cmbTipoPermiso').value;
-        guardarMov(tipo, 'Permiso'); 
-    }
-
-    // --- ALTA ---
-    async function registrarAlta() {
-        const id = document.getElementById('altaID').value.toUpperCase();
-        const file = document.getElementById('fileAlta').files[0];
-        if(!id || !file) { Swal.fire("Faltan datos", "", "warning"); return; }
-        
-        mostrarLoader(true);
-        try {
-            const snap = await db.collection("empleados").doc(id).get();
-            if(snap.exists) throw new Error("ID ya existe");
+            // 4. PRUEBA DE FUEGO: Escribir en Base de Datos
+            log("Intentando escribir en colección '_diagnostico'...");
             
-            const ref = storage.ref().child(`contratos/${id}_${Date.now()}.pdf`);
-            await ref.put(file);
-            const url = await ref.getDownloadURL();
-            
-            const nuevo = {
-                id: id, nombre: document.getElementById('altaNombre').value.toUpperCase(),
-                fechaAlta: document.getElementById('altaFecha').value,
-                depto: document.getElementById('altaDepto').value,
-                puesto: document.getElementById('altaPuesto').value,
-                tipo: document.getElementById('altaTipo').value,
-                empresa: document.getElementById('altaEmpresa').value,
-                curp: document.getElementById('altaCurp').value,
-                oficioAlta: document.getElementById('txtNumOficioAlta').value,
-                contratoUrl: url,
-                estatus: "ACTIVO", saldoVac: 0, saldoEcon: 2, saldoPSG: 0, saldoIncap: 0, acumuladoFaltas: 0,
-                // Extra fields
-                direccion: document.getElementById('altaDireccion').value,
-                tel: document.getElementById('altaTel').value,
-                seguro: document.getElementById('altaSeguro').value,
-                poliza: document.getElementById('altaPoliza').value,
-                banco: document.getElementById('altaBanco').value,
-                cuenta: document.getElementById('altaCuenta').value,
-                clabe: document.getElementById('altaClabe').value
-            };
-            
-            await db.collection("empleados").doc(id).set(nuevo);
-            mostrarLoader(false);
-            Swal.fire("Alta Exitosa", "", "success");
-            document.getElementById('formAlta').reset();
-            resetForm('Alta');
-            setTimeout(() => { document.getElementById('txtBuscarID').value = id; buscarEmpleado(); }, 500);
-            
-        } catch(e) { mostrarLoader(false); Swal.fire("Error", e.message, "error"); }
-    }
-
-    // --- ACTUALIZAR DATOS ---
-    async function actualizarDatos() {
-        if(!validarSesion()) return;
-        mostrarLoader(true);
-        try {
-            const upd = {
-                depto: document.getElementById('editDepto').value,
-                puesto: document.getElementById('editPuesto').value,
-                tipo: document.getElementById('editTipo').value,
-                empresa: document.getElementById('editEmpresa').value,
-                oficioAlta: document.getElementById('editNombramiento').value,
-                numArchivo: document.getElementById('editArchivo').value,
-                direccion: document.getElementById('editDireccion').value,
-                tel: document.getElementById('editTel').value,
-                curp: document.getElementById('editCurp').value,
-                banco: document.getElementById('editBanco').value,
-                cuenta: document.getElementById('editCuenta').value,
-                clabe: document.getElementById('editClabe').value,
-                seguro: document.getElementById('editSeguro').value,
-                poliza: document.getElementById('editPoliza').value
-            };
-            await db.collection("empleados").doc(empleadoActual.docId).update(upd);
-            mostrarLoader(false);
-            Swal.fire("Actualizado", "", "success");
-        } catch(e) { mostrarLoader(false); Swal.fire("Error", e.message, "error"); }
-    }
-
-    // --- REPORTES ---
-    function generarReporte() {
-        const fIni = document.getElementById('repFechaIni').value;
-        const fFin = document.getElementById('repFechaFin').value;
-        if(!fIni || !fFin) { Swal.fire("Fechas requeridas", "", "warning"); return; }
-        
-        mostrarLoader(true);
-        // Query simple + Filtro JS
-        db.collection("movimientos").limit(200).get().then(qs => {
-            const tbody = document.getElementById('tablaReportesBody');
-            tbody.innerHTML = "";
-            let dataExport = [];
-            
-            qs.forEach(doc => {
-                const d = doc.data();
-                if(d.fechaInicio >= fIni && d.fechaInicio <= fFin) {
-                    // Aplicar filtros extra aqui (empleado, tipo)
-                     tbody.innerHTML += `<tr><td>${d.fechaInicio}</td><td>${d.nombreEmpleado}</td><td>${d.tipo}</td><td>${d.dias}</td><td>${d.oficio}</td></tr>`;
-                     dataExport.push(d);
+            db.collection("_diagnostico").add({
+                prueba: "Conexión Exitosa desde Vercel",
+                fecha: new Date().toString(),
+                navegador: navigator.userAgent
+            })
+            .then((docRef) => {
+                ok("✅ ¡ESCRITURA EXITOSA! ID: " + docRef.id);
+                
+                // 5. PRUEBA DE FUEGO: Leer lo escrito
+                log("Intentando leer el documento...");
+                return docRef.get();
+            })
+            .then((doc) => {
+                if(doc.exists) {
+                    ok("✅ ¡LECTURA EXITOSA!");
+                    document.getElementById('main-status').className = "status-box bg-green";
+                    document.getElementById('main-status').innerText = "CONEXIÓN EXITOSA (100%)";
+                    log("CONCLUSIÓN: El problema NO es la conexión. Es el código del sistema principal.");
                 }
+            })
+            .catch((error) => {
+                console.error(error);
+                let explicacion = "Error desconocido";
+                if(error.code === 'permission-denied') explicacion = "Tus Reglas de Seguridad bloquean la escritura.";
+                if(error.code === 'unavailable') explicacion = "No hay internet o el firewall bloquea Firebase.";
+                
+                log(`❌ FALLO: ${explicacion}`);
+                log(`Detalle técnico: ${error.message}`);
+                document.getElementById('main-status').className = "status-box bg-red";
+                document.getElementById('main-status').innerText = "FALLO EN BASE DE DATOS";
             });
-            
-            // Guardar para Excel
-            window.datosReporteActual = dataExport;
-            document.getElementById('repContador').innerText = `Resultados: ${dataExport.length}`;
-            mostrarLoader(false);
-        });
-    }
-    
-    function descargarExcel() {
-        if(!window.datosReporteActual || window.datosReporteActual.length === 0) { Swal.fire("Sin datos", "Genera un reporte primero", "warning"); return; }
-        const ws = XLSX.utils.json_to_sheet(window.datosReporteActual);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Reporte");
-        XLSX.writeFile(wb, "Reporte_RH.xlsx");
-    }
 
-    // --- HELPERS ---
-    function fileSelected(sufijo) {
-        const input = document.getElementById('file' + sufijo);
-        if(input.files[0]) {
-            fileCache[sufijo] = input.files[0];
-            const btn = document.getElementById('btnScan' + sufijo);
-            btn.classList.add('archivo-cargado');
-            btn.querySelector('span').innerText = input.files[0].name;
-        }
-    }
-    
-    function calcFechas(sufijo, tipo) {
-        const dias = parseInt(document.getElementById('txtDias' + sufijo).value);
-        const inicio = document.getElementById('txtFecha' + sufijo).value;
-        if(dias && inicio) {
-            const d = new Date(inicio);
-            d.setMinutes(d.getMinutes() + d.getTimezoneOffset());
-            if(tipo === 'N') d.setDate(d.getDate() + (dias - 1));
-            else {
-                let c = dias - 1;
-                while(c > 0) { d.setDate(d.getDate()+1); if(d.getDay()!==0 && d.getDay()!==6) c--; }
-            }
-            document.getElementById('txtFechaFin' + sufijo).value = d.toISOString().split('T')[0];
+        } catch (e) {
+            log("❌ Excepción de Código: " + e.message);
         }
     }
 
-    document.getElementById('fechaSistema').innerText = new Date().toLocaleDateString();
-    
-    // Iniciar
-    window.onload = initApp;
+    // Auto-arranque seguro
+    window.addEventListener('load', () => {
+        log("Ventana cargada. Ejecutando diagnóstico automático en 1 seg...");
+        setTimeout(iniciarDiagnostico, 1000);
+    });
+
 </script>
 
 </body>

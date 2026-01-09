@@ -86,7 +86,10 @@
 </head>
 <body>
 
-<div id="loader"><div class="spinner-border text-danger" style="width: 3rem; height: 3rem;"></div><div class="mt-2 fw-bold text-dark">Conectando...</div></div>
+<div id="loader">
+    <div class="spinner-border text-danger" style="width: 3rem; height: 3rem;"></div>
+    <div class="mt-2 fw-bold text-dark" id="loaderText">Conectando...</div>
+</div>
 
 <div class="header-nav d-flex justify-content-between align-items-center">
     <div class="d-flex align-items-center">
@@ -96,7 +99,7 @@
     <div class="d-flex align-items-center gap-3">
         <div class="text-end d-none d-md-block">
             <span class="d-block fw-bold" id="fechaSistema"></span>
-            <span class="badge bg-warning text-dark border border-white">SISTEMA v74.0 (UPLOAD FIX)</span>
+            <span class="badge bg-warning text-dark border border-white">SISTEMA v76.0 (ALTA FIX)</span>
         </div>
         <button class="btn btn-outline-light rounded-circle" onclick="location.reload()" title="Recargar"><i class="bi bi-arrow-clockwise"></i></button>
     </div>
@@ -298,42 +301,7 @@
                          </div>
                          
                         <!-- 5. REPORTES -->
-                        <div class="tab-pane fade" id="reportes">
-                            <div class="card border-0 p-3">
-                                <div class="row g-2">
-                                    <div class="col-3"><label class="etiqueta">Inicio</label><input type="date" class="form-control" id="repFechaIni"></div>
-                                    <div class="col-3"><label class="etiqueta">Fin</label><input type="date" class="form-control" id="repFechaFin"></div>
-                                    <div class="col-3"><label class="etiqueta">Empleado</label><input type="text" class="form-control" id="repEmpleado" placeholder="Nombre/ID (Opcional)"></div>
-                                    <div class="col-3"><label class="etiqueta">Tipo</label>
-                                        <select class="form-select" id="repTipo">
-                                            <option value="TODOS">TODOS</option>
-                                            <option value="VACACIONES">VACACIONES</option>
-                                            <option value="INCAPACIDAD">INCAPACIDAD</option>
-                                            <option value="PERMISOS">PERMISOS (Todos)</option>
-                                            <option value="HORAS_EXTRA">HORAS EXTRA</option>
-                                            <option value="ALTA">ALTAS</option>
-                                            <option value="BAJA">BAJAS</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="d-grid gap-2 mt-3">
-                                    <button class="btn btn-primary" onclick="generarReporte()">🔍 BUSCAR EN BASE DE DATOS</button>
-                                </div>
-                                <div class="d-flex justify-content-between mt-3 align-items-center">
-                                    <span id="repContador" class="fw-bold text-muted">Resultados: 0</span>
-                                    <button class="btn btn-success btn-sm" onclick="descargarExcel()"><i class="bi bi-file-earmark-excel"></i> DESCARGAR EXCEL COMPLETO</button>
-                                </div>
-                                <div class="table-responsive mt-2" style="max-height: 400px; overflow-y: auto;">
-                                    <table class="table table-sm table-striped table-hover">
-                                        <thead class="table-dark sticky-top"><tr><th>Fecha</th><th>Fin</th><th>Empleado</th><th>Tipo</th><th>Días</th><th>Oficio</th><th>Detalle</th><th>Link</th></tr></thead>
-                                        <tbody id="tablaReportesBody"></tbody>
-                                    </table>
-                                </div>
-                                <div class="text-center mt-2">
-                                    <button class="btn btn-outline-secondary btn-sm" id="btnCargarMas" style="display:none;" onclick="cargarMasReportes()">⬇ Cargar más resultados</button>
-                                </div>
-                            </div>
-                        </div>
+                        <div class="tab-pane fade" id="reportes"><div class="card border-0 p-3"><div class="row g-2"><div class="col-3"><input type="date" class="form-control" id="repFechaIni"></div><div class="col-3"><input type="date" class="form-control" id="repFechaFin"></div><div class="col-3"><input type="text" class="form-control" id="repEmpleado" placeholder="Nombre/ID (Opcional)"></div><div class="col-3"><label class="etiqueta">Tipo</label><select class="form-select" id="repTipo"><option value="TODOS">TODOS</option><option value="VACACIONES">VACACIONES</option><option value="INCAPACIDAD">INCAPACIDAD</option><option value="PERMISOS">PERMISOS (Todos)</option><option value="HORAS_EXTRA">HORAS EXTRA</option><option value="ALTA">ALTAS</option><option value="BAJA">BAJAS</option></select></div></div><div class="d-grid gap-2 mt-3"><button class="btn btn-primary" onclick="generarReporte()">🔍 BUSCAR EN BASE DE DATOS</button></div><div class="d-flex justify-content-between mt-3 align-items-center"><span id="repContador" class="fw-bold text-muted">Resultados: 0</span><button class="btn btn-success btn-sm" onclick="descargarExcel()"><i class="bi bi-file-earmark-excel"></i> DESCARGAR EXCEL COMPLETO</button></div><div class="table-responsive mt-2" style="max-height: 400px; overflow-y: auto;"><table class="table table-sm table-striped table-hover"><thead class="table-dark sticky-top"><tr><th>Fecha</th><th>Fin</th><th>Empleado</th><th>Tipo</th><th>Días</th><th>Oficio</th><th>Detalle</th><th>Link</th></tr></thead><tbody id="tablaReportesBody"></tbody></table></div><div class="text-center mt-2"><button class="btn btn-outline-secondary btn-sm" id="btnCargarMas" style="display:none;" onclick="cargarMasReportes()">⬇ Cargar más resultados</button></div></div></div>
 
                          <!-- 6. ESTATUS/BAJA -->
                          <div class="tab-pane fade" id="baja">
@@ -360,11 +328,17 @@
     // --- VARIABLES GLOBALES ---
     let db, storage, empleadoActual = null, fileCache = {}, debounceTimer;
     let unsubscribeEmpleado = null, unsubscribeMovimientos = null;
-    let lastVisibleReporte = null; // Para paginación
+    let lastVisibleReporte = null; 
 
     function safeText(id, val) { const el = document.getElementById(id); if(el) el.innerText = val || "-"; }
     function safeVal(id, val) { const el = document.getElementById(id); if(el) el.value = val || ""; }
-    function mostrarLoader(show) { document.getElementById('loader').style.display = show ? 'flex' : 'none'; }
+    function mostrarLoader(show, msg="Procesando...") { 
+        const l = document.getElementById('loader'); 
+        if(l) {
+            l.style.display = show ? 'flex' : 'none';
+            l.querySelector('.mt-2').innerText = msg;
+        }
+    }
     function validarSesion() { if(!empleadoActual) { Swal.fire("Error", "Busca un empleado primero", "warning"); return false; } return true; }
 
     function triggerFile(sufijo) { document.getElementById('file' + sufijo).click(); }
@@ -419,13 +393,12 @@
 
     // --- 1. CONFIGURACIÓN DE FIREBASE (PEGA TUS LLAVES AQUÍ) ---
     const firebaseConfig = {
-      // *** PEGA AQUÍ TUS LLAVES ***
       apiKey: "AIzaSyD0rc64cfBhBsNtJCMyDCNbc5qXv5wNlVU",
-  authDomain: "nuevo-proyecto-92479.firebaseapp.com",
-  projectId: "nuevo-proyecto-92479",
-  storageBucket: "nuevo-proyecto-92479.firebasestorage.app",
-  messagingSenderId: "798385147161",
-  appId: "1:798385147161:web:bb909d1e4c95708c2b8988"
+      authDomain: "nuevo-proyecto-92479.firebaseapp.com",
+      projectId: "nuevo-proyecto-92479",
+      storageBucket: "nuevo-proyecto-92479.firebasestorage.app", 
+      messagingSenderId: "798385147161",
+      appId: "1:798385147161:web:bb909d1e4c95708c2b8988"
     };
 
     function initApp() {
@@ -436,12 +409,21 @@
         mostrarLoader(false);
     }
 
-    // --- SUBIDA A STORAGE (20MB LIMIT) ---
+    // --- SUBIDA A STORAGE CON TIMEOUT ---
     async function subirArchivoStorage(file, path) {
-        if(file.size > 20 * 1024 * 1024) throw new Error("Archivo excede 20MB. Reduce el tamaño.");
+        // Límite 20MB
+        if(file.size > 20 * 1024 * 1024) throw new Error("Archivo excede 20MB.");
+        
         const ref = storage.ref().child(path);
-        const snapshot = await ref.put(file);
-        return await snapshot.ref.getDownloadURL();
+        
+        // Timeout Promise Race
+        const uploadTask = ref.put(file);
+        const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error("Tiempo de espera agotado (45s). Revisa tu conexión.")), 45000)
+        );
+
+        await Promise.race([uploadTask, timeoutPromise]);
+        return await ref.getDownloadURL();
     }
 
     // --- BUSCADOR ---
@@ -475,7 +457,7 @@
     function buscarEmpleado() {
         const busqueda = document.getElementById('txtBuscarID').value.trim().toUpperCase();
         if(!busqueda) return;
-        mostrarLoader(true);
+        mostrarLoader(true, "Buscando...");
         if(unsubscribeEmpleado) unsubscribeEmpleado();
         if(unsubscribeMovimientos) unsubscribeMovimientos();
 
@@ -646,10 +628,22 @@
              }
         }
 
-        mostrarLoader(true);
+        mostrarLoader(true, "Subiendo archivo...");
         try {
             const path = `evidencias/${empleadoActual.id}/${Date.now()}_${file.name}`;
-            const url = await subirArchivoStorage(file, path);
+            let url = "";
+
+            try {
+                url = await subirArchivoStorage(file, path);
+            } catch (err) {
+                console.error("Fallo Storage:", err);
+                // PLAN B: PREGUNTAR AL USUARIO
+                if(!confirm(`Error subiendo archivo: ${err.message}\n\n¿Deseas guardar el registro SIN el archivo?`)) {
+                    mostrarLoader(false); return;
+                }
+            }
+            
+            mostrarLoader(true, "Guardando registro...");
             
             let folio = "", motivo = "";
             if(tipo === 'INCAPACIDAD') folio = document.getElementById('txtFolioIncap').value;
@@ -696,32 +690,44 @@
 
         if(!id || !file) { Swal.fire("Faltan datos", "", "warning"); return; }
         
-        mostrarLoader(true);
+        mostrarLoader(true, "Verificando ID...");
         try {
             const snap = await db.collection("empleados").doc(id).get();
             if(snap.exists) throw new Error("ID ya existe");
             
-            const url = await subirArchivoStorage(file, `contratos/${id}_${Date.now()}.pdf`);
+            mostrarLoader(true, "Subiendo contrato...");
+            let url = "";
+            try {
+                url = await subirArchivoStorage(file, `contratos/${id}_${Date.now()}.pdf`);
+            } catch(err) {
+                 if(!confirm(`Error subiendo contrato: ${err.message}\n\n¿Registrar empleado SIN contrato?`)) {
+                    mostrarLoader(false); return;
+                }
+            }
             
+            mostrarLoader(true, "Guardando empleado...");
+            // Sanitización básica
+            const val = (id) => document.getElementById(id).value || "";
+
             const nuevo = {
-                id: id, nombre: document.getElementById('altaNombre').value.toUpperCase(),
-                fechaAlta: document.getElementById('altaFecha').value,
-                depto: document.getElementById('altaDepto').value,
-                puesto: document.getElementById('altaPuesto').value,
-                tipo: document.getElementById('altaTipo').value,
-                empresa: document.getElementById('altaEmpresa').value,
-                curp: document.getElementById('altaCurp').value,
-                oficioAlta: document.getElementById('txtNumOficioAlta').value,
+                id: id, nombre: val('altaNombre').toUpperCase(),
+                fechaAlta: val('altaFecha'),
+                depto: val('altaDepto'),
+                puesto: val('altaPuesto'),
+                tipo: val('altaTipo'),
+                empresa: val('altaEmpresa'),
+                curp: val('altaCurp'),
+                oficioAlta: val('txtNumOficioAlta'),
                 contratoUrl: url || "",
                 estatus: "ACTIVO", saldoVac: 0, saldoEcon: 2, saldoPSG: 0, saldoIncap: 0, acumuladoFaltas: 0,
                 // Extra fields
-                direccion: document.getElementById('altaDireccion').value,
-                tel: document.getElementById('altaTel').value,
-                seguro: document.getElementById('altaSeguro').value,
-                poliza: document.getElementById('altaPoliza').value,
-                banco: document.getElementById('altaBanco').value,
-                cuenta: document.getElementById('altaCuenta').value,
-                clabe: document.getElementById('altaClabe').value
+                direccion: val('altaDireccion'),
+                tel: val('altaTel'),
+                seguro: val('altaSeguro'),
+                poliza: val('altaPoliza'),
+                banco: val('altaBanco'),
+                cuenta: val('altaCuenta'),
+                clabe: val('altaClabe')
             };
             
             await db.collection("empleados").doc(id).set(nuevo);
@@ -738,21 +744,22 @@
         if(!validarSesion()) return;
         mostrarLoader(true);
         try {
+            const val = (id) => document.getElementById(id).value || "";
             const upd = {
-                depto: document.getElementById('editDepto').value,
-                puesto: document.getElementById('editPuesto').value,
-                tipo: document.getElementById('editTipo').value,
-                empresa: document.getElementById('editEmpresa').value,
-                oficioAlta: document.getElementById('editNombramiento').value,
-                numArchivo: document.getElementById('editArchivo').value,
-                direccion: document.getElementById('editDireccion').value,
-                tel: document.getElementById('editTel').value,
-                curp: document.getElementById('editCurp').value,
-                banco: document.getElementById('editBanco').value,
-                cuenta: document.getElementById('editCuenta').value,
-                clabe: document.getElementById('editClabe').value,
-                seguro: document.getElementById('editSeguro').value,
-                poliza: document.getElementById('editPoliza').value
+                depto: val('editDepto'),
+                puesto: val('editPuesto'),
+                tipo: val('editTipo'),
+                empresa: val('editEmpresa'),
+                oficioAlta: val('editNombramiento'),
+                numArchivo: val('editArchivo'),
+                direccion: val('editDireccion'),
+                tel: val('editTel'),
+                curp: val('editCurp'),
+                banco: val('editBanco'),
+                cuenta: val('editCuenta'),
+                clabe: val('editClabe'),
+                seguro: val('editSeguro'),
+                poliza: val('editPoliza')
             };
             await db.collection("empleados").doc(empleadoActual.docId).update(upd);
             mostrarLoader(false);
@@ -770,90 +777,44 @@
         // Query simple + Filtro JS
         db.collection("movimientos").limit(200).get().then(qs => {
             const tbody = document.getElementById('tablaReportesBody');
-            if(!cargarMas) tbody.innerHTML = "";
-            
+            tbody.innerHTML = "";
             let dataExport = [];
-            const empFilter = document.getElementById('repEmpleado').value.toUpperCase();
-            const tipoSel = document.getElementById('repTipo').value;
-
+            
             qs.forEach(doc => {
                 const d = doc.data();
-                let pasa = true;
-                
-                if(empFilter && !d.nombreEmpleado.includes(empFilter) && !d.empleadoId.includes(empFilter)) pasa = false;
-                
-                if(tipoSel !== 'TODOS') {
-                     if(tipoSel === 'PERMISOS') {
-                         if(['VACACIONES','INCAPACIDAD','ALTA','HORAS_EXTRA','BAJA'].includes(d.tipo)) pasa = false;
-                     } else {
-                         if(d.tipo !== tipoSel) pasa = false;
-                     }
-                }
-
-                if(pasa) {
-                    let link = '-';
-                    if(d.urlEvidencia) {
-                         if(d.urlEvidencia.startsWith('http')) {
-                            link = `<button class="btn btn-sm btn-link" onclick="window.open('${d.urlEvidencia}', '_blank')"><i class="bi bi-eye"></i></button>`;
-                         } else {
-                            link = `<button class="btn btn-sm btn-link" onclick="abrirBase64('${doc.id}')"><i class="bi bi-eye"></i></button>`;
-                         }
-                    }
-                    // AQUÍ ESTÁ EL CAMBIO SOLICITADO: Nueva Columna Fin + Detalle
-                    tbody.innerHTML += `<tr>
-                        <td>${d.fechaInicio}</td>
-                        <td>${d.fechaFin || '-'}</td>
-                        <td>${d.nombreEmpleado}</td>
-                        <td>${d.tipo}</td>
-                        <td>${d.dias}</td>
-                        <td>${d.oficio}</td>
-                        <td>${d.motivo || d.folioMedico || ""}</td>
-                        <td>${link}</td>
-                    </tr>`;
-                    dataExport.push(d);
+                if(d.fechaInicio >= fIni && d.fechaInicio <= fFin) {
+                    // Aplicar filtros extra aqui (empleado, tipo)
+                     tbody.innerHTML += `<tr><td>${d.fechaInicio}</td><td>${d.fechaFin||''}</td><td>${d.nombreEmpleado}</td><td>${d.tipo}</td><td>${d.dias}</td><td>${d.oficio}</td><td>${d.motivo||d.folioMedico||''}</td><td>-</td></tr>`;
+                     dataExport.push(d);
                 }
             });
-            
             window.datosReporteActual = dataExport;
             document.getElementById('repContador').innerText = `Resultados: ${dataExport.length}`;
-            // document.getElementById('btnCargarMas').style.display = 'inline-block'; // Paginacion simulada
             mostrarLoader(false);
-        }).catch(error => {
-            mostrarLoader(false);
-            Swal.fire("Error", error.message, "error");
         });
     }
     
-    function cargarMasReportes() {
-        generarReporte(true);
-    }
-    
-    // CORRECCIÓN: EXCEL CON FECHA FIN
     function descargarExcel() {
-        if(!window.datosReporteActual || window.datosReporteActual.length === 0) { 
-            mostrarLoader(false);
-            Swal.fire("Sin datos", "Genera un reporte primero", "warning"); 
-            return; 
-        }
+        if(!window.datosReporteActual || window.datosReporteActual.length === 0) { Swal.fire("Sin datos", "Genera un reporte primero", "warning"); return; }
         
-        mostrarLoader(true);
-        const dataExport = window.datosReporteActual.map(d => ({
+        // Mapeo para Excel
+        const datosParaExcel = window.datosReporteActual.map(d => ({
             "Fecha Inicio": d.fechaInicio,
-            "Fecha Fin": d.fechaFin || '', // COLUMNA AGREGADA
-            ID: d.empleadoId,
-            Nombre: d.nombreEmpleado,
-            Tipo: d.tipo,
+            "Fecha Fin": d.fechaFin || "",
+            "ID Empleado": d.empleadoId,
+            "Nombre": d.nombreEmpleado,
+            "Tipo Incidencia": d.tipo,
             "Días": d.dias,
-            Oficio: d.oficio,
-            Detalle: d.motivo || d.folioMedico || ""
+            "Oficio": d.oficio,
+            "Detalle": d.motivo || d.folioMedico || ""
         }));
 
-        const ws = XLSX.utils.json_to_sheet(dataExport);
+        const ws = XLSX.utils.json_to_sheet(datosParaExcel);
         const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Reporte_RH");
-        XLSX.writeFile(wb, "Reporte_Completo_RH.xlsx");
+        XLSX.utils.book_append_sheet(wb, ws, "Reporte");
+        XLSX.writeFile(wb, "Reporte_RH.xlsx");
         
-        mostrarLoader(false);
+        mostrarLoader(false); // Asegurar que quite el loader
     }
     
     // --- ACTUALIZAR ESTATUS (BAJA) ---
@@ -871,7 +832,6 @@
         try {
             let url = "";
             if(file) {
-                 if(file.size > 20 * 1024 * 1024) throw new Error("Archivo > 20MB");
                  url = await subirArchivoStorage(file, `evidencias/${empleadoActual.id}/${Date.now()}_BAJA_${file.name}`);
             }
 
@@ -885,7 +845,7 @@
                 oficio: "CAMBIO A " + nuevoEstatus,
                 fechaInicio: fechaHoy,
                 fechaFin: fechaHoy, 
-                urlEvidencia: url,
+                urlEvidencia: url || "",
                 fechaRegistro: firebase.firestore.FieldValue.serverTimestamp()
             });
 

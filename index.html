@@ -100,7 +100,7 @@
     <div class="d-flex align-items-center gap-3">
         <div class="text-end d-none d-md-block">
             <span class="d-block fw-bold" id="fechaSistema"></span>
-            <span class="badge bg-warning text-dark border border-white">SISTEMA v79.0 (BUCKET FIX)</span>
+            <span class="badge bg-warning text-dark border border-white">SISTEMA v81.0 (CONTRATO)</span>
         </div>
         <button class="btn btn-outline-light rounded-circle" onclick="location.reload()" title="Recargar"><i class="bi bi-arrow-clockwise"></i></button>
     </div>
@@ -127,6 +127,9 @@
                             <span class="badge bg-dark fs-6" id="lblID">ID: ---</span>
                             <span class="badge bg-secondary" id="lblArchivoFisico">ARCH: ---</span>
                         </div>
+
+                        <!-- CAMBIO 1: BOTÓN VER CONTRATO (Solo si existe) -->
+                        <div id="btnVerContratoContainer" class="mt-2"></div>
                         
                         <div id="contenedorEstatus" class="mt-3">
                             <span class="badge-base estatus-activo" id="lblStatusDinamico">ACTIVO</span>
@@ -204,7 +207,6 @@
                                     <input type="number" class="form-control form-control-sm mb-2" id="txtDiasVac" placeholder="Días" oninput="calcFechas('Vac','H')">
                                     <div class="row g-1"><div class="col-6"><input type="date" class="form-control form-control-sm" id="txtFechaVac" onchange="calcFechas('Vac','H')"></div><div class="col-6"><input type="date" class="form-control form-control-sm input-calc" id="txtFechaFinVac" readonly></div></div>
                                     <input type="text" class="form-control form-control-sm mt-2" id="txtNumOficioVac" placeholder="No. Oficio">
-                                    <!-- BOTÓN CORREGIDO -->
                                     <div class="btn-scan mt-2" id="btnScanVac" onclick="triggerFile('Vac')"><i class="bi bi-paperclip"></i> <span id="lblScanVac">Adjuntar Oficio</span></div>
                                     <input type="file" id="fileVac" style="display:none" accept="image/*,.pdf" onchange="fileSelected('Vac')">
                                     <button class="btn btn-primary btn-sm w-100 mt-3" onclick="guardarMov('VACACIONES', 'Vac')">GUARDAR</button>
@@ -217,7 +219,6 @@
                                     <div class="row g-1"><div class="col-6"><input type="date" class="form-control form-control-sm" id="txtFechaIncap" onchange="calcFechas('Incap','N')"></div><div class="col-6"><input type="date" class="form-control form-control-sm input-calc" id="txtFechaFinIncap" readonly></div></div>
                                     <input type="text" class="form-control form-control-sm mt-2" id="txtNumOficioIncap" placeholder="No. Oficio">
                                     <input type="text" class="form-control form-control-sm mt-2" id="txtFolioIncap" placeholder="Folio Médico">
-                                    <!-- BOTÓN CORREGIDO -->
                                     <div class="btn-scan mt-2" id="btnScanIncap" onclick="triggerFile('Incap')"><i class="bi bi-paperclip"></i> <span id="lblScanIncap">Adjuntar Incap.</span></div>
                                     <input type="file" id="fileIncap" style="display:none" accept="image/*,.pdf" onchange="fileSelected('Incap')">
                                     <button class="btn btn-warning btn-sm w-100 mt-3" onclick="guardarMov('INCAPACIDAD', 'Incap')">GUARDAR</button>
@@ -237,7 +238,6 @@
                                     <div class="row g-1"><div class="col-6"><input type="date" class="form-control form-control-sm" id="txtFechaPermiso" onchange="calcFechas('Permiso','H')"></div><div class="col-6"><input type="date" class="form-control form-control-sm input-calc" id="txtFechaFinPermiso" readonly></div></div>
                                     <input type="text" class="form-control form-control-sm mt-2" id="txtNumOficioPermiso" placeholder="No. Oficio">
                                     <input type="text" class="form-control form-control-sm mt-2" id="txtMotivoPermiso" placeholder="Motivo">
-                                    <!-- BOTÓN CORREGIDO -->
                                     <div class="btn-scan mt-2" id="btnScanPermiso" onclick="triggerFile('Permiso')"><i class="bi bi-paperclip"></i> <span id="lblScanPermiso">Adjuntar Justif.</span></div>
                                     <input type="file" id="filePermiso" style="display:none" accept="image/*,.pdf" onchange="fileSelected('Permiso')">
                                     <button class="btn btn-dark btn-sm w-100 mt-3" onclick="guardarPermiso()">GUARDAR</button>
@@ -296,6 +296,16 @@
                                     <div class="form-section-header">BANCARIOS Y SS</div>
                                     <div class="row g-2 mb-2"><div class="col-4"><label class="etiqueta">Seguro</label><select id="editSeguro" class="form-select"><option>ISSSTESON</option><option>IMSS</option></select></div><div class="col-4"><label class="etiqueta">Póliza</label><input type="text" class="form-control" id="editPoliza"></div><div class="col-4"><label class="etiqueta">Banco</label><input type="text" class="form-control" id="editBanco"></div></div>
                                     <div class="row g-2 mb-2"><div class="col-6"><label class="etiqueta">Cuenta</label><input type="text" class="form-control" id="editCuenta"></div><div class="col-6"><label class="etiqueta">Clabe</label><input type="text" class="form-control" id="editClabe"></div></div>
+                                    
+                                    <!-- CAMBIO 2: BOTÓN PARA SUBIR CONTRATO POSTERIORMENTE -->
+                                    <div class="mt-3 p-3 bg-light border rounded">
+                                        <label class="etiqueta text-primary fw-bold">ACTUALIZAR CONTRATO/NOMBRAMIENTO</label>
+                                        <div class="btn-scan" id="btnScanEdit" onclick="triggerFile('Edit')">
+                                            <i class="bi bi-cloud-arrow-up"></i> <span id="lblScanEdit">Subir Nuevo Archivo</span>
+                                        </div>
+                                        <input type="file" id="fileEdit" style="display:none" onchange="fileSelected('Edit')">
+                                    </div>
+                                    
                                     <button type="button" class="btn btn-primary w-100 mt-3" onclick="actualizarDatos()">GUARDAR CAMBIOS</button>
                                 </form>
                             </div>
@@ -369,6 +379,7 @@
             else if (sufijo === 'Baja') texto = "Adjuntar Renuncia/Acta";
             else if (sufijo === 'Incap') texto = "Adjuntar Incap.";
             else if (sufijo === 'Permiso') texto = "Adjuntar Justif.";
+            else if (sufijo === 'Edit') texto = "Subir Nuevo Archivo";
             if(span) span.innerText = texto;
         }
         delete fileCache[sufijo];
@@ -392,12 +403,11 @@
         }
     }
 
-    // --- 1. CONFIGURACIÓN DE FIREBASE (PEGA TUS LLAVES AQUÍ) ---
+    // --- 1. CONFIGURACIÓN DE FIREBASE ---
     const firebaseConfig = {
       apiKey: "AIzaSyD0rc64cfBhBsNtJCMyDCNbc5qXv5wNlVU",
       authDomain: "nuevo-proyecto-92479.firebaseapp.com",
       projectId: "nuevo-proyecto-92479",
-      // Bucket actualizado con el nombre correcto de tu proyecto activo (con billing)
       storageBucket: "media-nuevo-proyecto-92479-2ecf", 
       messagingSenderId: "798385147161",
       appId: "1:798385147161:web:bb909d1e4c95708c2b8988"
@@ -413,18 +423,10 @@
 
     // --- SUBIDA A STORAGE ---
     async function subirArchivoStorage(file, path) {
-        // Se permite hasta 20MB. El bucket real soporta hasta 5TB, pero el navegador puede sufrir.
         if(file.size > 20 * 1024 * 1024) throw new Error("Archivo excede 20MB.");
         const ref = storage.ref().child(path);
-        
-        // Timeout Promise Race
-        const uploadTask = ref.put(file);
-        const timeoutPromise = new Promise((_, reject) => 
-            setTimeout(() => reject(new Error("Tiempo de espera agotado. Revisa tu conexión.")), 60000)
-        );
-
-        await Promise.race([uploadTask, timeoutPromise]);
-        return await ref.getDownloadURL();
+        const snapshot = await ref.put(file);
+        return await snapshot.ref.getDownloadURL();
     }
 
     // --- BUSCADOR ---
@@ -499,6 +501,15 @@
         safeText('lblNombre', e.nombre);
         safeText('lblID', "ID: " + e.id);
         safeText('lblArchivoFisico', "ARCH: " + (e.numArchivo || "N/A"));
+        
+        // CAMBIO 1: RENDERIZAR BOTÓN VER CONTRATO
+        const containerContrato = document.getElementById('btnVerContratoContainer');
+        if(e.contratoUrl) {
+            containerContrato.innerHTML = `<a href="${e.contratoUrl}" target="_blank" class="btn btn-sm btn-outline-danger fw-bold w-100"><i class="bi bi-file-earmark-pdf-fill"></i> VER CONTRATO</a>`;
+        } else {
+            containerContrato.innerHTML = '<small class="text-muted">Sin contrato digital</small>';
+        }
+
         safeText('txtDepto', e.depto);
         safeText('txtPuesto', e.puesto);
         safeText('txtAlta', e.fechaAlta);
@@ -632,16 +643,7 @@
         mostrarLoader(true, "Subiendo archivo...");
         try {
             const path = `evidencias/${empleadoActual.id}/${Date.now()}_${file.name}`;
-            let url = "";
-
-            try {
-                url = await subirArchivoStorage(file, path);
-            } catch (err) {
-                console.error("Fallo Storage:", err);
-                throw new Error("Error crítico: No se pudo subir el archivo a la nube. Verifique su conexión.");
-            }
-            
-            mostrarLoader(true, "Guardando registro...");
+            const url = await subirArchivoStorage(file, path);
             
             let folio = "", motivo = "";
             if(tipo === 'INCAPACIDAD') folio = document.getElementById('txtFolioIncap').value;
@@ -676,17 +678,23 @@
         } catch(e) { mostrarLoader(false); Swal.fire("Error", e.message, "error"); }
     }
     
-    // Wrapper functions
     function guardarVacaciones() { guardarMov('VACACIONES', 'Vac'); }
     function guardarIncapacidad() { guardarMov('INCAPACIDAD', 'Incap'); }
     function guardarPermiso() { guardarMov(document.getElementById('cmbTipoPermiso').value, 'Permiso'); }
 
     async function registrarAlta() {
+        // CAMBIO 3: Validación Fecha
+        const val = (id) => { 
+            const el = document.getElementById(id); 
+            return el && el.value ? (el.type === 'date' ? el.value : el.value.trim().toUpperCase()) : "";
+        };
+
         const id = document.getElementById('altaID').value.toUpperCase();
         const fileInput = document.getElementById('fileAlta');
         const file = fileInput ? fileInput.files[0] : null;
 
         if(!id || !file) { Swal.fire("Faltan datos", "", "warning"); return; }
+        if(!val('altaFecha')) { Swal.fire("Error", "La fecha de alta es obligatoria.", "warning"); return; } // Validacion Fecha
         
         mostrarLoader(true, "Verificando ID...");
         try {
@@ -698,18 +706,11 @@
             try {
                 url = await subirArchivoStorage(file, `contratos/${id}_${Date.now()}.pdf`);
             } catch(err) {
-                 throw new Error("La subida del contrato falló. No se puede registrar sin contrato.");
+                 throw new Error("La subida del contrato falló. Verifique su conexión.");
             }
             
             mostrarLoader(true, "Guardando empleado...");
-            // Sanitización básica y robusta
-            const val = (id) => { 
-                const el = document.getElementById(id); 
-                if(!el) return "";
-                // Si es fecha, devolvemos valor directo, si es texto, mayúsculas
-                return el.type === 'date' ? el.value : el.value.trim().toUpperCase(); 
-            };
-
+            
             const nuevo = {
                 id: id, nombre: val('altaNombre'),
                 fechaAlta: val('altaFecha'),
@@ -732,6 +733,14 @@
             };
             
             await db.collection("empleados").doc(id).set(nuevo);
+            
+            // AGREGAR MOVIMIENTO HISTORICO DE ALTA TAMBIEN (OPCIONAL PERO RECOMENDADO)
+            await db.collection("movimientos").add({
+                empleadoId: id, nombreEmpleado: nuevo.nombre, tipo: "ALTA", dias: 0, oficio: nuevo.oficioAlta,
+                fechaInicio: nuevo.fechaAlta, fechaFin: "", urlEvidencia: url,
+                fechaRegistro: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
             mostrarLoader(false);
             Swal.fire("Alta Exitosa", "", "success");
             document.getElementById('formAlta').reset();
@@ -746,6 +755,14 @@
         mostrarLoader(true);
         try {
             const val = (id) => document.getElementById(id).value || "";
+            
+            // CAMBIO 2: SUBIDA DE CONTRATO POSTERIOR
+            const file = fileCache['Edit'];
+            let url = null;
+            if(file) {
+                 url = await subirArchivoStorage(file, `contratos/${empleadoActual.id}_${Date.now()}_UPD.pdf`);
+            }
+
             const upd = {
                 depto: val('editDepto'),
                 puesto: val('editPuesto'),
@@ -762,20 +779,22 @@
                 seguro: val('editSeguro'),
                 poliza: val('editPoliza')
             };
+            
+            if(url) upd.contratoUrl = url; // Update only if new file
+
             await db.collection("empleados").doc(empleadoActual.docId).update(upd);
             mostrarLoader(false);
             Swal.fire("Actualizado", "", "success");
+            resetForm('Edit'); // Limpiar cache file edit
         } catch(e) { mostrarLoader(false); Swal.fire("Error", e.message, "error"); }
     }
 
-    // --- REPORTES ---
     function generarReporte(cargarMas = false) {
         const fIni = document.getElementById('repFechaIni').value;
         const fFin = document.getElementById('repFechaFin').value;
         if(!fIni || !fFin) { Swal.fire("Fechas requeridas", "", "warning"); return; }
         
         mostrarLoader(true);
-        // Query simple + Filtro JS
         db.collection("movimientos").limit(200).get().then(qs => {
             const tbody = document.getElementById('tablaReportesBody');
             if(!cargarMas) tbody.innerHTML = "";
@@ -808,7 +827,6 @@
                             link = `<button class="btn btn-sm btn-link" onclick="abrirBase64('${doc.id}')"><i class="bi bi-eye"></i></button>`;
                          }
                     }
-                    // AQUÍ ESTÁ EL CAMBIO SOLICITADO: Nueva Columna Fin + Detalle
                     tbody.innerHTML += `<tr>
                         <td>${d.fechaInicio}</td>
                         <td>${d.fechaFin || '-'}</td>
@@ -822,46 +840,33 @@
                     dataExport.push(d);
                 }
             });
-            
             window.datosReporteActual = dataExport;
             document.getElementById('repContador').innerText = `Resultados: ${dataExport.length}`;
-            // document.getElementById('btnCargarMas').style.display = 'inline-block'; // Paginacion simulada
             mostrarLoader(false);
-        }).catch(error => {
-            mostrarLoader(false);
-            Swal.fire("Error", error.message, "error");
         });
     }
     
-    // CORRECCIÓN: EXCEL CON FECHA FIN
     function descargarExcel() {
-        if(!window.datosReporteActual || window.datosReporteActual.length === 0) { 
-            mostrarLoader(false);
-            Swal.fire("Sin datos", "Genera un reporte primero", "warning"); 
-            return; 
-        }
+        if(!window.datosReporteActual || window.datosReporteActual.length === 0) { Swal.fire("Sin datos", "Genera un reporte primero", "warning"); return; }
         
-        mostrarLoader(true);
-        const dataExport = window.datosReporteActual.map(d => ({
+        const datosParaExcel = window.datosReporteActual.map(d => ({
             "Fecha Inicio": d.fechaInicio,
-            "Fecha Fin": d.fechaFin || '', // COLUMNA AGREGADA
-            ID: d.empleadoId,
-            Nombre: d.nombreEmpleado,
-            Tipo: d.tipo,
+            "Fecha Fin": d.fechaFin || "",
+            "ID Empleado": d.empleadoId,
+            "Nombre": d.nombreEmpleado,
+            "Tipo Incidencia": d.tipo,
             "Días": d.dias,
-            Oficio: d.oficio,
-            Detalle: d.motivo || d.folioMedico || ""
+            "Oficio": d.oficio,
+            "Detalle": d.motivo || d.folioMedico || ""
         }));
 
-        const ws = XLSX.utils.json_to_sheet(dataExport);
+        const ws = XLSX.utils.json_to_sheet(datosParaExcel);
         const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Reporte_RH");
-        XLSX.writeFile(wb, "Reporte_Completo_RH.xlsx");
-        
+        XLSX.utils.book_append_sheet(wb, ws, "Reporte");
+        XLSX.writeFile(wb, "Reporte_RH.xlsx");
         mostrarLoader(false);
     }
     
-    // --- ACTUALIZAR ESTATUS (BAJA) ---
     async function actualizarEstatus() {
         if(!validarSesion()) return;
         const nuevoEstatus = document.getElementById('cmbNuevoEstatus').value;
@@ -876,8 +881,7 @@
         try {
             let url = "";
             if(file) {
-                 if(file.size > 800 * 1024) throw new Error("Archivo > 800KB");
-                 url = await readFileAsBase64(file);
+                 url = await subirArchivoStorage(file, `evidencias/${empleadoActual.id}/${Date.now()}_BAJA_${file.name}`);
             }
 
             const fechaHoy = new Date().toISOString().split('T')[0];
@@ -890,7 +894,7 @@
                 oficio: "CAMBIO A " + nuevoEstatus,
                 fechaInicio: fechaHoy,
                 fechaFin: fechaHoy, 
-                urlEvidencia: url,
+                urlEvidencia: url || "",
                 fechaRegistro: firebase.firestore.FieldValue.serverTimestamp()
             });
 
@@ -906,8 +910,6 @@
     }
 
     document.getElementById('fechaSistema').innerText = new Date().toLocaleDateString();
-    
-    // Iniciar
     window.onload = initApp;
 </script>
 

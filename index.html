@@ -100,7 +100,7 @@
     <div class="d-flex align-items-center gap-3">
         <div class="text-end d-none d-md-block">
             <span class="d-block fw-bold" id="fechaSistema"></span>
-            <span class="badge bg-warning text-dark border border-white">SISTEMA v82.0 (ART 100)</span>
+            <span class="badge bg-warning text-dark border border-white">SISTEMA v84.0 (DIAS HABILES)</span>
         </div>
         <button class="btn btn-outline-light rounded-circle" onclick="location.reload()" title="Recargar"><i class="bi bi-arrow-clockwise"></i></button>
     </div>
@@ -344,6 +344,25 @@
     let unsubscribeEmpleado = null, unsubscribeMovimientos = null;
     let lastVisibleReporte = null; 
 
+    // CONSTANTE DE DÍAS FESTIVOS (Formato MM-DD)
+    const DIAS_FESTIVOS = [
+        "01-01", // Año Nuevo
+        "02-02", // Feriado Local / Candelaria
+        "02-24", // Día de la Bandera
+        "03-16", // Natalicio Benito Juárez
+        "04-02", // Jueves Santo
+        "04-03", // Viernes Santo
+        "05-01", // Día del Trabajo
+        "05-05", // Batalla de Puebla
+        "07-17", // Feriado Local
+        "09-15", // Grito Independencia
+        "09-16", // Independencia
+        "11-02", // Día de Muertos
+        "11-16", // Revolución
+        "12-12", // Virgen de Guadalupe
+        "12-25"  // Navidad
+    ];
+
     function safeText(id, val) { const el = document.getElementById(id); if(el) el.innerText = val || "-"; }
     function safeVal(id, val) { const el = document.getElementById(id); if(el) el.value = val || ""; }
     function mostrarLoader(show, msg="Procesando...") { 
@@ -373,13 +392,6 @@
     function resetForm(sufijo) {
         if(document.getElementById('txtNumOficio' + sufijo)) document.getElementById('txtNumOficio' + sufijo).value = "";
         if(document.getElementById('txtDias' + sufijo)) document.getElementById('txtDias' + sufijo).value = "";
-        
-        // Reset especial para extras
-        if(sufijo === 'Extra') {
-             if(document.getElementById('txtHorasLaboradas')) document.getElementById('txtHorasLaboradas').value = "";
-             if(document.getElementById('txtDiasExtra')) document.getElementById('txtDiasExtra').value = "";
-        }
-
         const btn = document.getElementById('btnScan' + sufijo);
         if(btn) {
             btn.classList.remove('archivo-cargado');
@@ -396,33 +408,51 @@
         delete fileCache[sufijo];
     }
 
+    // --- CÁLCULO DE FECHAS MEJORADO (CON FESTIVOS) ---
     function calcFechas(sufijo, type) {
         const diasIn = document.getElementById('txtDias'+sufijo);
         const fechaIn = document.getElementById('txtFecha'+sufijo);
         if(!diasIn || !fechaIn) return;
+        
         const dias = parseInt(diasIn.value);
-        const inicio = fechaIn.value;
+        const inicio = fechaIn.value; // YYYY-MM-DD
+        
         if(dias && inicio) {
             const d = new Date(inicio);
+            // Ajustar zona horaria para evitar desfases
             d.setMinutes(d.getMinutes() + d.getTimezoneOffset());
-            if(type === 'N') d.setDate(d.getDate() + (dias - 1));
-            else {
-                let c = dias - 1;
-                while(c > 0) { d.setDate(d.getDate()+1); if(d.getDay()!==0 && d.getDay()!==6) c--; }
+            
+            if(type === 'N') {
+                // Naturales: Simplemente sumar días
+                d.setDate(d.getDate() + (dias - 1));
+            } else {
+                // Hábiles: Saltar Sábados, Domingos y Festivos
+                let diasRestantes = dias - 1; // El primer día cuenta
+                
+                while(diasRestantes > 0) {
+                    d.setDate(d.getDate() + 1); // Avanzar un día
+                    
+                    const mes = (d.getMonth() + 1).toString().padStart(2, '0');
+                    const dia = d.getDate().toString().padStart(2, '0');
+                    const fechaMMDD = `${mes}-${dia}`;
+                    
+                    const esFinDeSemana = (d.getDay() === 0 || d.getDay() === 6);
+                    const esFestivo = DIAS_FESTIVOS.includes(fechaMMDD);
+                    
+                    // Si es hábil (ni finde ni festivo), descontamos
+                    if (!esFinDeSemana && !esFestivo) {
+                        diasRestantes--;
+                    }
+                }
             }
             document.getElementById('txtFechaFin'+sufijo).value = d.toISOString().split('T')[0];
         }
     }
     
-    // --- NUEVO CÁLCULO DE TURNOS (4 HORAS = 1 TURNO, MULTIPLOS DE .5) ---
     function calcularTurnos() {
         const horas = parseFloat(document.getElementById('txtHorasLaboradas').value) || 0;
         let turnos = horas / 4;
-        
-        // Redondeo al .5 más cercano
-        // Multiplicamos por 2, redondeamos al entero, y dividimos entre 2
         turnos = Math.round(turnos * 2) / 2;
-        
         document.getElementById('txtDiasExtra').value = turnos.toFixed(1);
     }
 
@@ -532,7 +562,6 @@
         safeText('lblID', "ID: " + e.id);
         safeText('lblArchivoFisico', "ARCH: " + (e.numArchivo || "N/A"));
         
-        // CAMBIO 1: RENDERIZAR BOTÓN VER CONTRATO
         const containerContrato = document.getElementById('btnVerContratoContainer');
         if(e.contratoUrl) {
             containerContrato.innerHTML = `<a href="${e.contratoUrl}" target="_blank" class="btn btn-sm btn-outline-danger fw-bold w-100"><i class="bi bi-file-earmark-pdf-fill"></i> VER CONTRATO</a>`;
@@ -662,7 +691,6 @@
         const dias = parseFloat(document.getElementById('txtDiasIncap').value) || 0;
         const tipo = document.getElementById('cmbTipoIncap').value;
 
-        // CÁLCULO DE ANTIGÜEDAD
         let antiguedad = 0;
         if(empleadoActual.fechaAlta) {
             let fa = empleadoActual.fechaAlta;
@@ -676,8 +704,7 @@
             }
         }
 
-        // LÍMITES POR LEY
-        let limite = 15; // Default < 1 año
+        let limite = 15; 
         if (antiguedad >= 1 && antiguedad < 5) limite = 30;
         else if (antiguedad >= 5 && antiguedad < 10) limite = 45;
         else if (antiguedad >= 10) limite = 60;
@@ -710,7 +737,6 @@
             }
         }
         
-        // Proceder a guardar
         guardarMov("INCAPACIDAD", "Incap"); 
     }
 
@@ -719,7 +745,6 @@
         
         let dias = 0;
         
-        // MANEJO ESPECIAL PARA HORAS EXTRA
         if(tipo === 'HORAS_EXTRA') {
             const diasInput = document.getElementById('txtDiasExtra');
             if(!diasInput || !diasInput.value) { 
@@ -727,7 +752,6 @@
             }
             dias = parseFloat(diasInput.value);
         } else {
-            // Lógica normal
             const diasInput = document.getElementById('txtDias'+sufijo);
             dias = diasInput ? (parseFloat(diasInput.value) || 0) : 0;
         }
@@ -765,11 +789,10 @@
             if(tipo === 'INCAPACIDAD') folio = document.getElementById('txtFolioIncap').value;
             if(sufijo === 'Permiso') motivo = document.getElementById('txtMotivoPermiso').value;
             
-            // Fechas para Extras es el día de hoy o un campo específico si se desea
             if(tipo === 'HORAS_EXTRA') {
                  fechaInicio = new Date().toISOString().split('T')[0];
                  fechaFin = fechaInicio;
-                 motivo = document.getElementById('txtHorasLaboradas').value + " Horas laboradas"; // Guardar detalle
+                 motivo = document.getElementById('txtHorasLaboradas').value + " Horas laboradas"; 
             } else {
                  fechaInicio = document.getElementById('txtFecha'+sufijo).value;
                  fechaFin = document.getElementById('txtFechaFin'+sufijo).value;
@@ -794,7 +817,6 @@
                 if(t === 'PCG_ECONOMICO') upd.saldoEcon = (empleadoActual.saldoEcon || 0) - dias;
                 if(t === 'PSG') upd.saldoPSG = (empleadoActual.saldoPSG || 0) + dias;
             }
-            // NO ACTUALIZAR SALDOS EN EXTRAS (Solo se registra para pago)
             
             if(Object.keys(upd).length > 0) await db.collection("empleados").doc(empleadoActual.docId).update(upd);
             
@@ -807,11 +829,9 @@
     
     // Wrapper functions
     function guardarVacaciones() { guardarMov('VACACIONES', 'Vac'); }
-    // GUARDAR INCAPACIDAD YA NO ES WRAPPER, TIENE SU PROPIA LÓGICA ARRIBA
     function guardarPermiso() { guardarMov(document.getElementById('cmbTipoPermiso').value, 'Permiso'); }
 
     async function registrarAlta() {
-        // CAMBIO 3: Validación Fecha
         const val = (id) => { 
             const el = document.getElementById(id); 
             return el && el.value ? (el.type === 'date' ? el.value : el.value.trim().toUpperCase()) : "";
@@ -822,7 +842,7 @@
         const file = fileInput ? fileInput.files[0] : null;
 
         if(!id || !file) { Swal.fire("Faltan datos", "", "warning"); return; }
-        if(!val('altaFecha')) { Swal.fire("Error", "La fecha de alta es obligatoria.", "warning"); return; } // Validacion Fecha
+        if(!val('altaFecha')) { Swal.fire("Error", "La fecha de alta es obligatoria.", "warning"); return; } 
         
         mostrarLoader(true, "Verificando ID...");
         try {
@@ -862,7 +882,6 @@
             
             await db.collection("empleados").doc(id).set(nuevo);
             
-            // AGREGAR MOVIMIENTO HISTORICO DE ALTA TAMBIEN (OPCIONAL PERO RECOMENDADO)
             await db.collection("movimientos").add({
                 empleadoId: id, nombreEmpleado: nuevo.nombre, tipo: "ALTA", dias: 0, oficio: nuevo.oficioAlta,
                 fechaInicio: nuevo.fechaAlta, fechaFin: "", urlEvidencia: url,
@@ -884,7 +903,6 @@
         try {
             const val = (id) => document.getElementById(id).value || "";
             
-            // CAMBIO 2: SUBIDA DE CONTRATO POSTERIOR
             const file = fileCache['Edit'];
             let url = null;
             if(file) {
@@ -908,12 +926,12 @@
                 poliza: val('editPoliza')
             };
             
-            if(url) upd.contratoUrl = url; // Update only if new file
+            if(url) upd.contratoUrl = url; 
 
             await db.collection("empleados").doc(empleadoActual.docId).update(upd);
             mostrarLoader(false);
             Swal.fire("Actualizado", "", "success");
-            resetForm('Edit'); // Limpiar cache file edit
+            resetForm('Edit'); 
         } catch(e) { mostrarLoader(false); Swal.fire("Error", e.message, "error"); }
     }
 
@@ -972,11 +990,7 @@
             });
             window.datosReporteActual = dataExport;
             document.getElementById('repContador').innerText = `Resultados: ${dataExport.length}`;
-            // document.getElementById('btnCargarMas').style.display = 'inline-block'; // Paginacion simulada
             mostrarLoader(false);
-        }).catch(error => {
-            mostrarLoader(false);
-            Swal.fire("Error", error.message, "error");
         });
     }
     

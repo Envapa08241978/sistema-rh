@@ -96,7 +96,7 @@
     <div class="d-flex align-items-center gap-3">
         <div class="text-end d-none d-md-block">
             <span class="d-block fw-bold" id="fechaSistema"></span>
-            <span class="badge bg-warning text-dark border border-white">SISTEMA v73.0 (LOADER FIX)</span>
+            <span class="badge bg-warning text-dark border border-white">SISTEMA v74.0 (UPLOAD FIX)</span>
         </div>
         <button class="btn btn-outline-light rounded-circle" onclick="location.reload()" title="Recargar"><i class="bi bi-arrow-clockwise"></i></button>
     </div>
@@ -297,7 +297,7 @@
                             </div>
                          </div>
                          
-                        <!-- 5. REPORTES (MEJORADO V73 - CORRECCIÓN SPINNER) -->
+                        <!-- 5. REPORTES -->
                         <div class="tab-pane fade" id="reportes">
                             <div class="card border-0 p-3">
                                 <div class="row g-2">
@@ -419,6 +419,7 @@
 
     // --- 1. CONFIGURACIÓN DE FIREBASE (PEGA TUS LLAVES AQUÍ) ---
     const firebaseConfig = {
+      // *** PEGA AQUÍ TUS LLAVES ***
       apiKey: "AIzaSyD0rc64cfBhBsNtJCMyDCNbc5qXv5wNlVU",
   authDomain: "nuevo-proyecto-92479.firebaseapp.com",
   projectId: "nuevo-proyecto-92479",
@@ -435,9 +436,9 @@
         mostrarLoader(false);
     }
 
-    // --- SUBIDA A STORAGE ---
+    // --- SUBIDA A STORAGE (20MB LIMIT) ---
     async function subirArchivoStorage(file, path) {
-        if(file.size > 20 * 1024 * 1024) throw new Error("Archivo excede 20MB.");
+        if(file.size > 20 * 1024 * 1024) throw new Error("Archivo excede 20MB. Reduce el tamaño.");
         const ref = storage.ref().child(path);
         const snapshot = await ref.put(file);
         return await snapshot.ref.getDownloadURL();
@@ -700,9 +701,7 @@
             const snap = await db.collection("empleados").doc(id).get();
             if(snap.exists) throw new Error("ID ya existe");
             
-            // Base64 para alta también
-            if(file.size > 800 * 1024) throw new Error("Archivo > 800KB");
-            const base64 = await readFileAsBase64(file);
+            const url = await subirArchivoStorage(file, `contratos/${id}_${Date.now()}.pdf`);
             
             const nuevo = {
                 id: id, nombre: document.getElementById('altaNombre').value.toUpperCase(),
@@ -713,7 +712,7 @@
                 empresa: document.getElementById('altaEmpresa').value,
                 curp: document.getElementById('altaCurp').value,
                 oficioAlta: document.getElementById('txtNumOficioAlta').value,
-                contratoUrl: base64,
+                contratoUrl: url || "",
                 estatus: "ACTIVO", saldoVac: 0, saldoEcon: 2, saldoPSG: 0, saldoIncap: 0, acumuladoFaltas: 0,
                 // Extra fields
                 direccion: document.getElementById('altaDireccion').value,
@@ -768,71 +767,65 @@
         if(!fIni || !fFin) { Swal.fire("Fechas requeridas", "", "warning"); return; }
         
         mostrarLoader(true);
-        
-        // CORRECCIÓN: PAGINACIÓN Y FILTROS EN CLIENTE (MÁS SEGURO PARA ÍNDICES)
-        // Para evitar problemas de índice complejo en esta versión, bajamos un bloque y filtramos.
-        // Si necesitas paginación real de servidor, requerimos crear índice. Aquí usamos cliente.
-        
-        db.collection("movimientos")
-            .where('fechaInicio', '>=', fIni)
-            .where('fechaInicio', '<=', fFin)
-            .limit(200) // Traer un bloque razonable
-            .get().then(qs => {
-                const tbody = document.getElementById('tablaReportesBody');
-                if(!cargarMas) tbody.innerHTML = "";
-                
-                let dataExport = [];
-                const empFilter = document.getElementById('repEmpleado').value.toUpperCase();
-                const tipoSel = document.getElementById('repTipo').value;
+        // Query simple + Filtro JS
+        db.collection("movimientos").limit(200).get().then(qs => {
+            const tbody = document.getElementById('tablaReportesBody');
+            if(!cargarMas) tbody.innerHTML = "";
+            
+            let dataExport = [];
+            const empFilter = document.getElementById('repEmpleado').value.toUpperCase();
+            const tipoSel = document.getElementById('repTipo').value;
 
-                qs.forEach(doc => {
-                    const d = doc.data();
-                    let pasa = true;
-                    
-                    if(empFilter && !d.nombreEmpleado.includes(empFilter) && !d.empleadoId.includes(empFilter)) pasa = false;
-                    
-                    if(tipoSel !== 'TODOS') {
-                         if(tipoSel === 'PERMISOS') {
-                             if(['VACACIONES','INCAPACIDAD','ALTA','HORAS_EXTRA','BAJA'].includes(d.tipo)) pasa = false;
+            qs.forEach(doc => {
+                const d = doc.data();
+                let pasa = true;
+                
+                if(empFilter && !d.nombreEmpleado.includes(empFilter) && !d.empleadoId.includes(empFilter)) pasa = false;
+                
+                if(tipoSel !== 'TODOS') {
+                     if(tipoSel === 'PERMISOS') {
+                         if(['VACACIONES','INCAPACIDAD','ALTA','HORAS_EXTRA','BAJA'].includes(d.tipo)) pasa = false;
+                     } else {
+                         if(d.tipo !== tipoSel) pasa = false;
+                     }
+                }
+
+                if(pasa) {
+                    let link = '-';
+                    if(d.urlEvidencia) {
+                         if(d.urlEvidencia.startsWith('http')) {
+                            link = `<button class="btn btn-sm btn-link" onclick="window.open('${d.urlEvidencia}', '_blank')"><i class="bi bi-eye"></i></button>`;
                          } else {
-                             if(d.tipo !== tipoSel) pasa = false;
+                            link = `<button class="btn btn-sm btn-link" onclick="abrirBase64('${doc.id}')"><i class="bi bi-eye"></i></button>`;
                          }
                     }
-
-                    if(pasa) {
-                        let link = '-';
-                        if(d.urlEvidencia) {
-                             if(d.urlEvidencia.startsWith('http')) {
-                                link = `<button class="btn btn-sm btn-link" onclick="window.open('${d.urlEvidencia}', '_blank')"><i class="bi bi-eye"></i></button>`;
-                             } else {
-                                link = `<button class="btn btn-sm btn-link" onclick="abrirBase64('${doc.id}')"><i class="bi bi-eye"></i></button>`;
-                             }
-                        }
-                        // AQUÍ ESTÁ EL CAMBIO SOLICITADO: Nueva Columna Fin + Detalle
-                        tbody.innerHTML += `<tr>
-                            <td>${d.fechaInicio}</td>
-                            <td>${d.fechaFin || '-'}</td>
-                            <td>${d.nombreEmpleado}</td>
-                            <td>${d.tipo}</td>
-                            <td>${d.dias}</td>
-                            <td>${d.oficio}</td>
-                            <td>${d.motivo || d.folioMedico || ""}</td>
-                            <td>${link}</td>
-                        </tr>`;
-                        dataExport.push(d);
-                    }
-                });
-                
-                window.datosReporteActual = dataExport;
-                document.getElementById('repContador').innerText = `Resultados: ${dataExport.length}`;
-                mostrarLoader(false);
-            })
-            .catch(error => {
-                mostrarLoader(false);
-                // Si pide índice, avisar
-                if(error.code === 'failed-precondition') Swal.fire("Requiere Índice", "Abre la consola (F12) y haz clic en el enlace de Firebase.", "info");
-                else Swal.fire("Error", error.message, "error");
+                    // AQUÍ ESTÁ EL CAMBIO SOLICITADO: Nueva Columna Fin + Detalle
+                    tbody.innerHTML += `<tr>
+                        <td>${d.fechaInicio}</td>
+                        <td>${d.fechaFin || '-'}</td>
+                        <td>${d.nombreEmpleado}</td>
+                        <td>${d.tipo}</td>
+                        <td>${d.dias}</td>
+                        <td>${d.oficio}</td>
+                        <td>${d.motivo || d.folioMedico || ""}</td>
+                        <td>${link}</td>
+                    </tr>`;
+                    dataExport.push(d);
+                }
             });
+            
+            window.datosReporteActual = dataExport;
+            document.getElementById('repContador').innerText = `Resultados: ${dataExport.length}`;
+            // document.getElementById('btnCargarMas').style.display = 'inline-block'; // Paginacion simulada
+            mostrarLoader(false);
+        }).catch(error => {
+            mostrarLoader(false);
+            Swal.fire("Error", error.message, "error");
+        });
+    }
+    
+    function cargarMasReportes() {
+        generarReporte(true);
     }
     
     // CORRECCIÓN: EXCEL CON FECHA FIN
@@ -878,8 +871,8 @@
         try {
             let url = "";
             if(file) {
-                 if(file.size > 800 * 1024) throw new Error("Archivo > 800KB");
-                 url = await readFileAsBase64(file);
+                 if(file.size > 20 * 1024 * 1024) throw new Error("Archivo > 20MB");
+                 url = await subirArchivoStorage(file, `evidencias/${empleadoActual.id}/${Date.now()}_BAJA_${file.name}`);
             }
 
             const fechaHoy = new Date().toISOString().split('T')[0];

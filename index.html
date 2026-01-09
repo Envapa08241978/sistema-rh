@@ -5,9 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema RH - Municipio de Navojoa</title>
     
-    <!-- Bootstrap 5 CSS -->
+    <!-- Bootstrap 5 & Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Iconos -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     
     <!-- Librerías Externas -->
@@ -100,7 +99,7 @@
     <div class="d-flex align-items-center gap-3">
         <div class="text-end d-none d-md-block">
             <span class="d-block fw-bold" id="fechaSistema"></span>
-            <span class="badge bg-warning text-dark border border-white">SISTEMA v81.0 (FINAL)</span>
+            <span class="badge bg-warning text-dark border border-white">SISTEMA v82.0 (EXTRAS)</span>
         </div>
         <button class="btn btn-outline-light rounded-circle" onclick="location.reload()" title="Recargar"><i class="bi bi-arrow-clockwise"></i></button>
     </div>
@@ -207,6 +206,7 @@
                                     <input type="number" class="form-control form-control-sm mb-2" id="txtDiasVac" placeholder="Días" oninput="calcFechas('Vac','H')">
                                     <div class="row g-1"><div class="col-6"><input type="date" class="form-control form-control-sm" id="txtFechaVac" onchange="calcFechas('Vac','H')"></div><div class="col-6"><input type="date" class="form-control form-control-sm input-calc" id="txtFechaFinVac" readonly></div></div>
                                     <input type="text" class="form-control form-control-sm mt-2" id="txtNumOficioVac" placeholder="No. Oficio">
+                                    <!-- BOTÓN CORREGIDO -->
                                     <div class="btn-scan mt-2" id="btnScanVac" onclick="triggerFile('Vac')"><i class="bi bi-paperclip"></i> <span id="lblScanVac">Adjuntar Oficio</span></div>
                                     <input type="file" id="fileVac" style="display:none" accept="image/*,.pdf" onchange="fileSelected('Vac')">
                                     <button class="btn btn-primary btn-sm w-100 mt-3" onclick="guardarMov('VACACIONES', 'Vac')">GUARDAR</button>
@@ -219,6 +219,7 @@
                                     <div class="row g-1"><div class="col-6"><input type="date" class="form-control form-control-sm" id="txtFechaIncap" onchange="calcFechas('Incap','N')"></div><div class="col-6"><input type="date" class="form-control form-control-sm input-calc" id="txtFechaFinIncap" readonly></div></div>
                                     <input type="text" class="form-control form-control-sm mt-2" id="txtNumOficioIncap" placeholder="No. Oficio">
                                     <input type="text" class="form-control form-control-sm mt-2" id="txtFolioIncap" placeholder="Folio Médico">
+                                    <!-- BOTÓN CORREGIDO -->
                                     <div class="btn-scan mt-2" id="btnScanIncap" onclick="triggerFile('Incap')"><i class="bi bi-paperclip"></i> <span id="lblScanIncap">Adjuntar Incap.</span></div>
                                     <input type="file" id="fileIncap" style="display:none" accept="image/*,.pdf" onchange="fileSelected('Incap')">
                                     <button class="btn btn-warning btn-sm w-100 mt-3" onclick="guardarMov('INCAPACIDAD', 'Incap')">GUARDAR</button>
@@ -238,6 +239,7 @@
                                     <div class="row g-1"><div class="col-6"><input type="date" class="form-control form-control-sm" id="txtFechaPermiso" onchange="calcFechas('Permiso','H')"></div><div class="col-6"><input type="date" class="form-control form-control-sm input-calc" id="txtFechaFinPermiso" readonly></div></div>
                                     <input type="text" class="form-control form-control-sm mt-2" id="txtNumOficioPermiso" placeholder="No. Oficio">
                                     <input type="text" class="form-control form-control-sm mt-2" id="txtMotivoPermiso" placeholder="Motivo">
+                                    <!-- BOTÓN CORREGIDO -->
                                     <div class="btn-scan mt-2" id="btnScanPermiso" onclick="triggerFile('Permiso')"><i class="bi bi-paperclip"></i> <span id="lblScanPermiso">Adjuntar Justif.</span></div>
                                     <input type="file" id="filePermiso" style="display:none" accept="image/*,.pdf" onchange="fileSelected('Permiso')">
                                     <button class="btn btn-dark btn-sm w-100 mt-3" onclick="guardarPermiso()">GUARDAR</button>
@@ -245,25 +247,49 @@
                             </div>
                         </div>
 
-                         <!-- 2. EXTRAS (HORAS EXTRA) -->
+                         <!-- 2. EXTRAS (HORAS EXTRA - CORREGIDO PARA 4 HORAS = 1 TURNO, MULTIPLOS DE .5) -->
                          <div class="tab-pane fade" id="extras">
                             <div class="row justify-content-center pt-4">
                                 <div class="col-md-8 text-center">
                                     <div class="card border-0 shadow-sm p-4">
                                         <i class="bi bi-stopwatch fs-1 text-info mb-3"></i>
                                         <h4 class="fw-bold" style="color: var(--navojoa-tinto);">Calculadora de Turnos</h4>
+                                        
                                         <div class="row mb-3 align-items-end">
-                                            <div class="col-8"><label class="etiqueta text-start w-100">Horas Laboradas</label><input type="number" class="form-control" id="txtHorasLaboradas" placeholder="Ej: 9.5"></div>
-                                            <div class="col-4"><button class="btn btn-info text-white w-100" onclick="alert('Cálculo: ' + (parseFloat(document.getElementById('txtHorasLaboradas').value||0)/8).toFixed(2))">Calcular</button></div>
+                                            <div class="col-6">
+                                                <label class="etiqueta text-start w-100">Horas Laboradas</label>
+                                                <input type="number" class="form-control" id="txtHorasLaboradas" placeholder="Ej: 6" oninput="calcularTurnos()">
+                                            </div>
+                                            <div class="col-6">
+                                                <label class="etiqueta text-start w-100 text-success fw-bold">Turnos a Pagar</label>
+                                                <input type="text" class="form-control fw-bold text-center" id="txtDiasExtra" readonly style="background-color: #d1e7dd; color: #0f5132;">
+                                            </div>
                                         </div>
-                                        <div class="text-start row"><div class="col-md-6"><div class="mb-3"><label class="etiqueta text-dark fs-6 mb-1">NO. OFICIO / MEMORÁNDUM</label><input type="text" class="form-control" id="txtNumOficioExtra"></div></div><div class="col-md-6"><label class="etiqueta text-dark fs-6 mb-1">LISTA DE RAYA</label><div class="btn-scan" id="btnScanExtra" onclick="triggerFile('Extra')"><i class="bi bi-camera-fill fs-5 d-block"></i><span id="lblScanExtra">Escanear</span></div><input type="file" id="fileExtra" class="input-file-oculto" accept=".pdf,image/*" onchange="fileSelected('Extra')"></div></div>
+
+                                        <div class="text-start row">
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label class="etiqueta text-dark fs-6 mb-1">NO. OFICIO / MEMORÁNDUM</label>
+                                                    <input type="text" class="form-control" id="txtNumOficioExtra">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="etiqueta text-dark fs-6 mb-1">LISTA DE RAYA</label>
+                                                <div class="btn-scan" id="btnScanExtra" onclick="triggerFile('Extra')">
+                                                    <i class="bi bi-camera-fill fs-5 d-block"></i>
+                                                    <span id="lblScanExtra">Escanear</span>
+                                                </div>
+                                                <input type="file" id="fileExtra" style="display:none" accept=".pdf,image/*" onchange="fileSelected('Extra')">
+                                            </div>
+                                        </div>
+                                        
                                         <button class="btn btn-success w-100 fw-bold mt-4" onclick="guardarMov('HORAS_EXTRA', 'Extra')">REGISTRAR PAGO EXTRA</button>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- 3. ALTA (FECHA OBLIGATORIA) -->
+                        <!-- 3. ALTA -->
                         <div class="tab-pane fade" id="alta">
                              <div class="card border-0 p-3">
                                 <form id="formAlta">
@@ -282,7 +308,7 @@
                             </div>
                         </div>
                         
-                        <!-- 4. DATOS (CON ACTUALIZACIÓN DE CONTRATO) -->
+                        <!-- 4. DATOS -->
                          <div class="tab-pane fade" id="datos">
                             <div class="card border-0 p-3">
                                 <form id="formEdicion">
@@ -370,6 +396,13 @@
     function resetForm(sufijo) {
         if(document.getElementById('txtNumOficio' + sufijo)) document.getElementById('txtNumOficio' + sufijo).value = "";
         if(document.getElementById('txtDias' + sufijo)) document.getElementById('txtDias' + sufijo).value = "";
+        
+        // Reset especial para extras
+        if(sufijo === 'Extra') {
+             if(document.getElementById('txtHorasLaboradas')) document.getElementById('txtHorasLaboradas').value = "";
+             if(document.getElementById('txtDiasExtra')) document.getElementById('txtDiasExtra').value = "";
+        }
+
         const btn = document.getElementById('btnScan' + sufijo);
         if(btn) {
             btn.classList.remove('archivo-cargado');
@@ -380,6 +413,7 @@
             else if (sufijo === 'Incap') texto = "Adjuntar Incap.";
             else if (sufijo === 'Permiso') texto = "Adjuntar Justif.";
             else if (sufijo === 'Edit') texto = "Subir Nuevo Archivo";
+            else if (sufijo === 'Extra') texto = "Escanear";
             if(span) span.innerText = texto;
         }
         delete fileCache[sufijo];
@@ -401,6 +435,18 @@
             }
             document.getElementById('txtFechaFin'+sufijo).value = d.toISOString().split('T')[0];
         }
+    }
+    
+    // --- NUEVO CÁLCULO DE TURNOS (4 HORAS = 1 TURNO, MULTIPLOS DE .5) ---
+    function calcularTurnos() {
+        const horas = parseFloat(document.getElementById('txtHorasLaboradas').value) || 0;
+        let turnos = horas / 4;
+        
+        // Redondeo al .5 más cercano
+        // Multiplicamos por 2, redondeamos al entero, y dividimos entre 2
+        turnos = Math.round(turnos * 2) / 2;
+        
+        document.getElementById('txtDiasExtra').value = turnos.toFixed(1);
     }
 
     // --- 1. CONFIGURACIÓN DE FIREBASE (PEGA TUS LLAVES AQUÍ) ---
@@ -425,8 +471,15 @@
     async function subirArchivoStorage(file, path) {
         if(file.size > 20 * 1024 * 1024) throw new Error("Archivo excede 20MB.");
         const ref = storage.ref().child(path);
-        const snapshot = await ref.put(file);
-        return await snapshot.ref.getDownloadURL();
+        
+        // Timeout Promise Race
+        const uploadTask = ref.put(file);
+        const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error("Tiempo de espera agotado. Revisa tu conexión.")), 60000)
+        );
+
+        await Promise.race([uploadTask, timeoutPromise]);
+        return await ref.getDownloadURL();
     }
 
     // --- BUSCADOR ---
@@ -627,7 +680,22 @@
 
     async function guardarMov(tipo, sufijo) {
         if(!validarSesion()) return;
-        const dias = parseFloat(document.getElementById('txtDias'+sufijo).value) || 0;
+        
+        let dias = 0;
+        
+        // MANEJO ESPECIAL PARA HORAS EXTRA
+        if(tipo === 'HORAS_EXTRA') {
+            const diasInput = document.getElementById('txtDiasExtra');
+            if(!diasInput || !diasInput.value) { 
+                Swal.fire("Calcula las horas primero", "", "warning"); return; 
+            }
+            dias = parseFloat(diasInput.value);
+        } else {
+            // Lógica normal
+            const diasInput = document.getElementById('txtDias'+sufijo);
+            dias = diasInput ? (parseFloat(diasInput.value) || 0) : 0;
+        }
+
         const oficio = document.getElementById('txtNumOficio'+sufijo).value;
         const fileInput = document.getElementById('file' + sufijo);
         const file = fileInput ? fileInput.files[0] : null;
@@ -643,18 +711,40 @@
         mostrarLoader(true, "Subiendo archivo...");
         try {
             const path = `evidencias/${empleadoActual.id}/${Date.now()}_${file.name}`;
-            const url = await subirArchivoStorage(file, path);
+            let url = "";
+
+            try {
+                url = await subirArchivoStorage(file, path);
+            } catch (err) {
+                console.error("Fallo Storage:", err);
+                throw new Error("Error crítico: No se pudo subir el archivo a la nube. Verifique su conexión.");
+            }
+            
+            mostrarLoader(true, "Guardando registro...");
             
             let folio = "", motivo = "";
+            let fechaInicio = "";
+            let fechaFin = "";
+
             if(tipo === 'INCAPACIDAD') folio = document.getElementById('txtFolioIncap').value;
             if(sufijo === 'Permiso') motivo = document.getElementById('txtMotivoPermiso').value;
+            
+            // Fechas para Extras es el día de hoy o un campo específico si se desea
+            if(tipo === 'HORAS_EXTRA') {
+                 fechaInicio = new Date().toISOString().split('T')[0];
+                 fechaFin = fechaInicio;
+                 motivo = document.getElementById('txtHorasLaboradas').value + " Horas laboradas"; // Guardar detalle
+            } else {
+                 fechaInicio = document.getElementById('txtFecha'+sufijo).value;
+                 fechaFin = document.getElementById('txtFechaFin'+sufijo).value;
+            }
 
             const mov = {
                 empleadoId: empleadoActual.id, nombreEmpleado: empleadoActual.nombre,
                 tipo: tipo, dias: dias, oficio: oficio,
                 folioMedico: folio, motivo: motivo,
-                fechaInicio: document.getElementById('txtFecha'+sufijo).value,
-                fechaFin: document.getElementById('txtFechaFin'+sufijo).value,
+                fechaInicio: fechaInicio,
+                fechaFin: fechaFin,
                 urlEvidencia: url || "", fechaRegistro: firebase.firestore.FieldValue.serverTimestamp()
             };
             
@@ -668,6 +758,7 @@
                 if(t === 'PCG_ECONOMICO') upd.saldoEcon = (empleadoActual.saldoEcon || 0) - dias;
                 if(t === 'PSG') upd.saldoPSG = (empleadoActual.saldoPSG || 0) + dias;
             }
+            // NO ACTUALIZAR SALDOS EN EXTRAS (Solo se registra para pago)
             
             if(Object.keys(upd).length > 0) await db.collection("empleados").doc(empleadoActual.docId).update(upd);
             
@@ -897,7 +988,7 @@
                 oficio: "CAMBIO A " + nuevoEstatus,
                 fechaInicio: fechaHoy,
                 fechaFin: fechaHoy, 
-                urlEvidencia: url,
+                urlEvidencia: url || "",
                 fechaRegistro: firebase.firestore.FieldValue.serverTimestamp()
             });
 

@@ -100,7 +100,7 @@
     <div class="d-flex align-items-center gap-3">
         <div class="text-end d-none d-md-block">
             <span class="d-block fw-bold" id="fechaSistema"></span>
-            <span class="badge bg-warning text-dark border border-white">SISTEMA v81.0 (CONTRATO)</span>
+            <span class="badge bg-warning text-dark border border-white">SISTEMA v81.0 (FINAL)</span>
         </div>
         <button class="btn btn-outline-light rounded-circle" onclick="location.reload()" title="Recargar"><i class="bi bi-arrow-clockwise"></i></button>
     </div>
@@ -128,7 +128,7 @@
                             <span class="badge bg-secondary" id="lblArchivoFisico">ARCH: ---</span>
                         </div>
 
-                        <!-- CAMBIO 1: BOTÓN VER CONTRATO (Solo si existe) -->
+                        <!-- 1. BOTÓN VER CONTRATO (Solo si existe) -->
                         <div id="btnVerContratoContainer" class="mt-2"></div>
                         
                         <div id="contenedorEstatus" class="mt-3">
@@ -263,7 +263,7 @@
                             </div>
                         </div>
 
-                        <!-- 3. ALTA -->
+                        <!-- 3. ALTA (FECHA OBLIGATORIA) -->
                         <div class="tab-pane fade" id="alta">
                              <div class="card border-0 p-3">
                                 <form id="formAlta">
@@ -282,7 +282,7 @@
                             </div>
                         </div>
                         
-                        <!-- 4. DATOS -->
+                        <!-- 4. DATOS (CON ACTUALIZACIÓN DE CONTRATO) -->
                          <div class="tab-pane fade" id="datos">
                             <div class="card border-0 p-3">
                                 <form id="formEdicion">
@@ -297,7 +297,7 @@
                                     <div class="row g-2 mb-2"><div class="col-4"><label class="etiqueta">Seguro</label><select id="editSeguro" class="form-select"><option>ISSSTESON</option><option>IMSS</option></select></div><div class="col-4"><label class="etiqueta">Póliza</label><input type="text" class="form-control" id="editPoliza"></div><div class="col-4"><label class="etiqueta">Banco</label><input type="text" class="form-control" id="editBanco"></div></div>
                                     <div class="row g-2 mb-2"><div class="col-6"><label class="etiqueta">Cuenta</label><input type="text" class="form-control" id="editCuenta"></div><div class="col-6"><label class="etiqueta">Clabe</label><input type="text" class="form-control" id="editClabe"></div></div>
                                     
-                                    <!-- CAMBIO 2: BOTÓN PARA SUBIR CONTRATO POSTERIORMENTE -->
+                                    <!-- 2. SECCIÓN DOCUMENTACIÓN -->
                                     <div class="mt-3 p-3 bg-light border rounded">
                                         <label class="etiqueta text-primary fw-bold">ACTUALIZAR CONTRATO/NOMBRAMIENTO</label>
                                         <div class="btn-scan" id="btnScanEdit" onclick="triggerFile('Edit')">
@@ -403,7 +403,7 @@
         }
     }
 
-    // --- 1. CONFIGURACIÓN DE FIREBASE ---
+    // --- 1. CONFIGURACIÓN DE FIREBASE (PEGA TUS LLAVES AQUÍ) ---
     const firebaseConfig = {
       apiKey: "AIzaSyD0rc64cfBhBsNtJCMyDCNbc5qXv5wNlVU",
       authDomain: "nuevo-proyecto-92479.firebaseapp.com",
@@ -678,6 +678,7 @@
         } catch(e) { mostrarLoader(false); Swal.fire("Error", e.message, "error"); }
     }
     
+    // Wrapper functions
     function guardarVacaciones() { guardarMov('VACACIONES', 'Vac'); }
     function guardarIncapacidad() { guardarMov('INCAPACIDAD', 'Incap'); }
     function guardarPermiso() { guardarMov(document.getElementById('cmbTipoPermiso').value, 'Permiso'); }
@@ -789,12 +790,14 @@
         } catch(e) { mostrarLoader(false); Swal.fire("Error", e.message, "error"); }
     }
 
+    // --- REPORTES ---
     function generarReporte(cargarMas = false) {
         const fIni = document.getElementById('repFechaIni').value;
         const fFin = document.getElementById('repFechaFin').value;
         if(!fIni || !fFin) { Swal.fire("Fechas requeridas", "", "warning"); return; }
         
         mostrarLoader(true);
+        // Query simple + Filtro JS
         db.collection("movimientos").limit(200).get().then(qs => {
             const tbody = document.getElementById('tablaReportesBody');
             if(!cargarMas) tbody.innerHTML = "";
@@ -864,9 +867,9 @@
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Reporte");
         XLSX.writeFile(wb, "Reporte_RH.xlsx");
-        mostrarLoader(false);
     }
     
+    // --- ACTUALIZAR ESTATUS (BAJA) ---
     async function actualizarEstatus() {
         if(!validarSesion()) return;
         const nuevoEstatus = document.getElementById('cmbNuevoEstatus').value;
@@ -894,7 +897,7 @@
                 oficio: "CAMBIO A " + nuevoEstatus,
                 fechaInicio: fechaHoy,
                 fechaFin: fechaHoy, 
-                urlEvidencia: url || "",
+                urlEvidencia: url,
                 fechaRegistro: firebase.firestore.FieldValue.serverTimestamp()
             });
 

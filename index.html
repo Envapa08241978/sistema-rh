@@ -5,9 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema RH - Municipio de Navojoa</title>
     
-    <!-- Bootstrap 5 CSS -->
+    <!-- Bootstrap 5 & Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Iconos -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     
     <!-- Librerías Externas -->
@@ -100,7 +99,7 @@
     <div class="d-flex align-items-center gap-3">
         <div class="text-end d-none d-md-block">
             <span class="d-block fw-bold" id="fechaSistema"></span>
-            <span class="badge bg-warning text-dark border border-white">SISTEMA v84.0 (DIAS HABILES)</span>
+            <span class="badge bg-warning text-dark border border-white">SISTEMA v86.0 (AUTO VAC)</span>
         </div>
         <button class="btn btn-outline-light rounded-circle" onclick="location.reload()" title="Recargar"><i class="bi bi-arrow-clockwise"></i></button>
     </div>
@@ -168,7 +167,7 @@
 
                     <div class="seccion-titulo">TABLERO DE CONTROL (ANUAL)</div>
                     <div class="row g-1 bg-light p-2 rounded text-center">
-                        <div class="col-6"><div class="saldo-box" style="border-left: 3px solid var(--navojoa-tinto);"><span class="saldo-titulo">VACACIONES</span><span class="saldo-numero" id="lblSaldoVac">0</span><span class="saldo-sub" id="lblDerechoVac">Der: 0</span></div></div>
+                        <div class="col-6"><div class="saldo-box" style="border-left: 3px solid var(--navojoa-tinto);"><span class="saldo-titulo">VACACIONES</span><span class="saldo-numero" id="lblSaldoVac">0</span><span class="saldo-sub" id="lblDerechoVac">Der: 0 /sem</span></div></div>
                         <div class="col-6"><div class="saldo-box" style="border-left: 3px solid var(--navojoa-dorado);"><span class="saldo-titulo">DÍAS ECON.</span><span class="saldo-numero" id="lblSaldoEcon">0</span><span class="saldo-sub">Max: 2</span></div></div>
                         <div class="col-3"><div class="saldo-box"><span class="saldo-titulo">P.S.G.</span><span class="saldo-numero" id="lblSaldoPSG">0</span></div></div>
                         <div class="col-3"><div class="saldo-box"><span class="saldo-titulo">INCAP.</span><span class="saldo-numero" id="lblSaldoIncap">0</span></div></div>
@@ -346,21 +345,9 @@
 
     // CONSTANTE DE DÍAS FESTIVOS (Formato MM-DD)
     const DIAS_FESTIVOS = [
-        "01-01", // Año Nuevo
-        "02-02", // Feriado Local / Candelaria
-        "02-24", // Día de la Bandera
-        "03-16", // Natalicio Benito Juárez
-        "04-02", // Jueves Santo
-        "04-03", // Viernes Santo
-        "05-01", // Día del Trabajo
-        "05-05", // Batalla de Puebla
-        "07-17", // Feriado Local
-        "09-15", // Grito Independencia
-        "09-16", // Independencia
-        "11-02", // Día de Muertos
-        "11-16", // Revolución
-        "12-12", // Virgen de Guadalupe
-        "12-25"  // Navidad
+        "01-01", "02-02", "02-24", "03-16", "04-02", "04-03", 
+        "05-01", "05-05", "07-17", "09-15", "09-16", "11-02", 
+        "11-16", "12-12", "12-25"
     ];
 
     function safeText(id, val) { const el = document.getElementById(id); if(el) el.innerText = val || "-"; }
@@ -408,6 +395,83 @@
         delete fileCache[sufijo];
     }
 
+    // --- NUEVO MOTOR DE VACACIONES AUTOMÁTICO (v86.0) ---
+    function calcularSaldoVacacionesReales(empleado) {
+        if (!empleado.fechaAlta) return { derecho: 0, usados: 0, saldo: 0, periodo: "N/A" };
+
+        const hoy = new Date();
+        let alta;
+        if (empleado.fechaAlta && empleado.fechaAlta.toDate) {
+            alta = empleado.fechaAlta.toDate();
+        } else if (typeof empleado.fechaAlta === 'string') {
+            const parts = empleado.fechaAlta.split('-');
+            alta = new Date(parts[0], parts[1] - 1, parts[2]); 
+        } else {
+            alta = new Date(empleado.fechaAlta);
+        }
+        
+        if (isNaN(alta.getTime())) return { derecho: 0, usados: 0, saldo: 0, periodo: "Error Fecha" };
+
+        // 1. Antigüedad en meses
+        let mesesAntiguedad = (hoy.getFullYear() - alta.getFullYear()) * 12;
+        mesesAntiguedad -= alta.getMonth();
+        mesesAntiguedad += hoy.getMonth();
+        if (hoy.getDate() < alta.getDate()) mesesAntiguedad--;
+
+        if (mesesAntiguedad < 6) {
+            return { derecho: 0, usados: 0, saldo: 0, periodo: "Antigüedad < 6 meses" };
+        }
+
+        // 2. Derecho Semestral
+        const aniosCumplidos = mesesAntiguedad / 12;
+        const quinquenios = Math.floor(aniosCumplidos / 5);
+        const derechoSemestral = 10 + quinquenios;
+
+        // 3. Periodo Actual
+        const currentYear = hoy.getFullYear();
+        let inicioPeriodo, finPeriodo, nombrePeriodo;
+
+        if (hoy.getMonth() < 6) { 
+            inicioPeriodo = new Date(currentYear, 0, 1);
+            finPeriodo = new Date(currentYear, 5, 30);
+            nombrePeriodo = `1º Sem ${currentYear}`;
+        } else { 
+            inicioPeriodo = new Date(currentYear, 6, 1);
+            finPeriodo = new Date(currentYear, 11, 31);
+            nombrePeriodo = `2º Sem ${currentYear}`;
+        }
+
+        // 4. Consumo en este periodo
+        let diasGastados = 0;
+        if (empleado.movimientos) {
+            empleado.movimientos.forEach(mov => {
+                if (mov.tipo === 'VACACIONES') {
+                    let fechaMov;
+                    if (mov.fechaInicio && typeof mov.fechaInicio === 'string') {
+                        const fParts = mov.fechaInicio.split('-');
+                        fechaMov = new Date(fParts[0], fParts[1] - 1, fParts[2]);
+                    } else {
+                         fechaMov = new Date(mov.fechaInicio); 
+                    }
+
+                    if (fechaMov >= inicioPeriodo && fechaMov <= finPeriodo) {
+                        diasGastados += parseFloat(mov.dias || 0);
+                    }
+                }
+            });
+        }
+
+        let saldoFinal = derechoSemestral - diasGastados;
+        if(saldoFinal < 0) saldoFinal = 0; 
+
+        return {
+            derecho: derechoSemestral,
+            usados: diasGastados,
+            saldo: saldoFinal,
+            periodo: nombrePeriodo
+        };
+    }
+
     // --- CÁLCULO DE FECHAS MEJORADO (CON FESTIVOS) ---
     function calcFechas(sufijo, type) {
         const diasIn = document.getElementById('txtDias'+sufijo);
@@ -419,18 +483,14 @@
         
         if(dias && inicio) {
             const d = new Date(inicio);
-            // Ajustar zona horaria para evitar desfases
             d.setMinutes(d.getMinutes() + d.getTimezoneOffset());
             
             if(type === 'N') {
-                // Naturales: Simplemente sumar días
                 d.setDate(d.getDate() + (dias - 1));
             } else {
-                // Hábiles: Saltar Sábados, Domingos y Festivos
-                let diasRestantes = dias - 1; // El primer día cuenta
-                
+                let diasRestantes = dias - 1; 
                 while(diasRestantes > 0) {
-                    d.setDate(d.getDate() + 1); // Avanzar un día
+                    d.setDate(d.getDate() + 1); 
                     
                     const mes = (d.getMonth() + 1).toString().padStart(2, '0');
                     const dia = d.getDate().toString().padStart(2, '0');
@@ -439,7 +499,6 @@
                     const esFinDeSemana = (d.getDay() === 0 || d.getDay() === 6);
                     const esFestivo = DIAS_FESTIVOS.includes(fechaMMDD);
                     
-                    // Si es hábil (ni finde ni festivo), descontamos
                     if (!esFinDeSemana && !esFestivo) {
                         diasRestantes--;
                     }
@@ -455,7 +514,7 @@
         turnos = Math.round(turnos * 2) / 2;
         document.getElementById('txtDiasExtra').value = turnos.toFixed(1);
     }
-
+    
     // --- 1. CONFIGURACIÓN DE FIREBASE (PEGA TUS LLAVES AQUÍ) ---
     const firebaseConfig = {
       apiKey: "AIzaSyD0rc64cfBhBsNtJCMyDCNbc5qXv5wNlVU",
@@ -478,13 +537,10 @@
     async function subirArchivoStorage(file, path) {
         if(file.size > 20 * 1024 * 1024) throw new Error("Archivo excede 20MB.");
         const ref = storage.ref().child(path);
-        
-        // Timeout Promise Race
         const uploadTask = ref.put(file);
         const timeoutPromise = new Promise((_, reject) => 
             setTimeout(() => reject(new Error("Tiempo de espera agotado. Revisa tu conexión.")), 60000)
         );
-
         await Promise.race([uploadTask, timeoutPromise]);
         return await ref.getDownloadURL();
     }
@@ -584,7 +640,11 @@
         safeText('txtCuenta', e.cuenta);
         safeText('txtClabe', e.clabe);
 
-        safeText('lblSaldoVac', e.saldoVac || 0);
+        // LOGICA DE VACACIONES AUTOMÁTICA
+        const infoVac = calcularSaldoVacacionesReales(e);
+        safeText('lblSaldoVac', infoVac.saldo);
+        safeText('lblDerechoVac', `Der: ${infoVac.derecho} /sem`);
+
         safeText('lblSaldoEcon', e.saldoEcon || 0);
         safeText('lblSaldoPSG', (e.saldoPSG || 0) + " / 45");
         safeText('lblSaldoIncap', e.saldoIncap || 0);
@@ -619,8 +679,6 @@
             if(!isNaN(fa.getTime())) {
                 const anti = Math.abs(hoy - fa) / (1000 * 60 * 60 * 24 * 365.25);
                 safeText('txtAntiguedad', anti.toFixed(1) + " Años");
-                let der = 10 + Math.floor(anti/5);
-                safeText('lblDerechoVac', `Der: ${der}`);
             }
         }
         
@@ -740,6 +798,41 @@
         guardarMov("INCAPACIDAD", "Incap"); 
     }
 
+    // --- REGLAS SINDICALES (PERMISOS) ---
+    async function guardarPermiso() {
+        if(!validarSesion()) return;
+        const tipo = document.getElementById('cmbTipoPermiso').value;
+        const dias = parseFloat(document.getElementById('txtDiasPermiso').value) || 0;
+
+        if(tipo.includes('PCG')) {
+            if(empleadoActual.tipo !== 'SINDICALIZADO') {
+                Swal.fire('Denegado', 'Permisos con Goce (PCG) exclusivos para SINDICALIZADOS.', 'error');
+                return;
+            }
+        }
+        
+        if(tipo === 'PSG') {
+             if((empleadoActual.saldoPSG || 0) + dias > 45) {
+                 const confirmacion = await Swal.fire({
+                     icon: 'warning',
+                     title: 'Límite PSG Excedido',
+                     text: `Acumulado actual: ${empleadoActual.saldoPSG} + ${dias} nuevos > 45 días. ¿Continuar?`,
+                     showCancelButton: true
+                 });
+                 if(!confirmacion.isConfirmed) return;
+             }
+        }
+
+        if(tipo === 'PCG_ECONOMICO') {
+             if(dias > (empleadoActual.saldoEcon || 0)) {
+                 Swal.fire('Saldo Insuficiente', `Solo restan ${empleadoActual.saldoEcon} días económicos.`, 'error');
+                 return;
+             }
+        }
+
+        guardarMov(tipo, "Permiso");
+    }
+
     async function guardarMov(tipo, sufijo) {
         if(!validarSesion()) return;
         
@@ -762,9 +855,12 @@
         
         if(!file || !oficio) { Swal.fire("Faltan Datos", "Oficio y Archivo obligatorios", "warning"); return; }
         
+        // VALIDACIÓN DE SALDO VACACIONES CON LÓGICA AUTOMÁTICA
         if(tipo === 'VACACIONES') {
-             if(dias > (empleadoActual.saldoVac||0) && document.getElementById('cmbTipoVac').value !== 'CANCELACION') {
-                 Swal.fire("Saldo Insuficiente", "", "error"); return; 
+             const infoVac = calcularSaldoVacacionesReales(empleadoActual);
+             const accion = document.getElementById('cmbTipoVac').value;
+             if(dias > infoVac.saldo && accion !== 'CANCELACION') {
+                 Swal.fire("Saldo Insuficiente", `Solo tienes ${infoVac.saldo} días disponibles en este semestre.`, "error"); return; 
              }
         }
 
@@ -810,13 +906,13 @@
             await db.collection("movimientos").add(mov);
             
             let upd = {};
-            if(tipo === 'VACACIONES') upd = { saldoVac: (empleadoActual.saldoVac||0) - dias };
             if(tipo === 'INCAPACIDAD') upd = { saldoIncap: (empleadoActual.saldoIncap||0) + dias };
             if(sufijo === 'Permiso') {
                 const t = document.getElementById('cmbTipoPermiso').value;
                 if(t === 'PCG_ECONOMICO') upd.saldoEcon = (empleadoActual.saldoEcon || 0) - dias;
                 if(t === 'PSG') upd.saldoPSG = (empleadoActual.saldoPSG || 0) + dias;
             }
+            // NO ACTUALIZAR SALDO VACACIONES AQUÍ, SE CALCULA AUTOMÁTICO
             
             if(Object.keys(upd).length > 0) await db.collection("empleados").doc(empleadoActual.docId).update(upd);
             
@@ -829,7 +925,7 @@
     
     // Wrapper functions
     function guardarVacaciones() { guardarMov('VACACIONES', 'Vac'); }
-    function guardarPermiso() { guardarMov(document.getElementById('cmbTipoPermiso').value, 'Permiso'); }
+    // guardarIncapacidad y guardarPermiso tienen su propia lógica arriba
 
     async function registrarAlta() {
         const val = (id) => { 
@@ -870,7 +966,6 @@
                 oficioAlta: val('txtNumOficioAlta'),
                 contratoUrl: url || "",
                 estatus: "ACTIVO", saldoVac: 0, saldoEcon: 2, saldoPSG: 0, saldoIncap: 0, acumuladoFaltas: 0,
-                // Extra fields
                 direccion: val('altaDireccion'),
                 tel: val('altaTel'),
                 seguro: val('altaSeguro'),
@@ -942,7 +1037,6 @@
         if(!fIni || !fFin) { Swal.fire("Fechas requeridas", "", "warning"); return; }
         
         mostrarLoader(true);
-        // Query simple + Filtro JS
         db.collection("movimientos").limit(200).get().then(qs => {
             const tbody = document.getElementById('tablaReportesBody');
             if(!cargarMas) tbody.innerHTML = "";

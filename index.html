@@ -5,8 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema RH - Municipio de Navojoa</title>
     
-    <!-- Bootstrap 5 & Icons -->
+    <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Iconos -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     
     <!-- Librerías Externas -->
@@ -99,7 +100,7 @@
     <div class="d-flex align-items-center gap-3">
         <div class="text-end d-none d-md-block">
             <span class="d-block fw-bold" id="fechaSistema"></span>
-            <span class="badge bg-warning text-dark border border-white">SISTEMA v82.0 (EXTRAS)</span>
+            <span class="badge bg-warning text-dark border border-white">SISTEMA v82.0 (ART 100)</span>
         </div>
         <button class="btn btn-outline-light rounded-circle" onclick="location.reload()" title="Recargar"><i class="bi bi-arrow-clockwise"></i></button>
     </div>
@@ -209,7 +210,7 @@
                                     <!-- BOTÓN CORREGIDO -->
                                     <div class="btn-scan mt-2" id="btnScanVac" onclick="triggerFile('Vac')"><i class="bi bi-paperclip"></i> <span id="lblScanVac">Adjuntar Oficio</span></div>
                                     <input type="file" id="fileVac" style="display:none" accept="image/*,.pdf" onchange="fileSelected('Vac')">
-                                    <button class="btn btn-primary btn-sm w-100 mt-3" onclick="guardarMov('VACACIONES', 'Vac')">GUARDAR</button>
+                                    <button class="btn btn-primary btn-sm w-100 mt-3" onclick="guardarVacaciones()">GUARDAR</button>
                                 </div></div>
                                 <!-- INCAPACIDAD -->
                                 <div class="col-md-4"><div class="card h-100 border shadow-sm p-3">
@@ -222,7 +223,7 @@
                                     <!-- BOTÓN CORREGIDO -->
                                     <div class="btn-scan mt-2" id="btnScanIncap" onclick="triggerFile('Incap')"><i class="bi bi-paperclip"></i> <span id="lblScanIncap">Adjuntar Incap.</span></div>
                                     <input type="file" id="fileIncap" style="display:none" accept="image/*,.pdf" onchange="fileSelected('Incap')">
-                                    <button class="btn btn-warning btn-sm w-100 mt-3" onclick="guardarMov('INCAPACIDAD', 'Incap')">GUARDAR</button>
+                                    <button class="btn btn-warning btn-sm w-100 mt-3" onclick="guardarIncapacidad()">GUARDAR</button>
                                 </div></div>
                                 <!-- PERMISOS -->
                                 <div class="col-md-4"><div class="card h-100 border shadow-sm p-3">
@@ -247,42 +248,18 @@
                             </div>
                         </div>
 
-                         <!-- 2. EXTRAS (HORAS EXTRA - CORREGIDO PARA 4 HORAS = 1 TURNO, MULTIPLOS DE .5) -->
+                         <!-- 2. EXTRAS (HORAS EXTRA) -->
                          <div class="tab-pane fade" id="extras">
                             <div class="row justify-content-center pt-4">
                                 <div class="col-md-8 text-center">
                                     <div class="card border-0 shadow-sm p-4">
                                         <i class="bi bi-stopwatch fs-1 text-info mb-3"></i>
                                         <h4 class="fw-bold" style="color: var(--navojoa-tinto);">Calculadora de Turnos</h4>
-                                        
                                         <div class="row mb-3 align-items-end">
-                                            <div class="col-6">
-                                                <label class="etiqueta text-start w-100">Horas Laboradas</label>
-                                                <input type="number" class="form-control" id="txtHorasLaboradas" placeholder="Ej: 6" oninput="calcularTurnos()">
-                                            </div>
-                                            <div class="col-6">
-                                                <label class="etiqueta text-start w-100 text-success fw-bold">Turnos a Pagar</label>
-                                                <input type="text" class="form-control fw-bold text-center" id="txtDiasExtra" readonly style="background-color: #d1e7dd; color: #0f5132;">
-                                            </div>
+                                            <div class="col-8"><label class="etiqueta text-start w-100">Horas Laboradas</label><input type="number" class="form-control" id="txtHorasLaboradas" placeholder="Ej: 9.5" oninput="calcularTurnos()"></div>
+                                            <div class="col-4"><input type="text" class="form-control fw-bold text-center" id="txtDiasExtra" readonly style="background-color: #d1e7dd; color: #0f5132;"></div>
                                         </div>
-
-                                        <div class="text-start row">
-                                            <div class="col-md-6">
-                                                <div class="mb-3">
-                                                    <label class="etiqueta text-dark fs-6 mb-1">NO. OFICIO / MEMORÁNDUM</label>
-                                                    <input type="text" class="form-control" id="txtNumOficioExtra">
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <label class="etiqueta text-dark fs-6 mb-1">LISTA DE RAYA</label>
-                                                <div class="btn-scan" id="btnScanExtra" onclick="triggerFile('Extra')">
-                                                    <i class="bi bi-camera-fill fs-5 d-block"></i>
-                                                    <span id="lblScanExtra">Escanear</span>
-                                                </div>
-                                                <input type="file" id="fileExtra" style="display:none" accept=".pdf,image/*" onchange="fileSelected('Extra')">
-                                            </div>
-                                        </div>
-                                        
+                                        <div class="text-start row"><div class="col-md-6"><div class="mb-3"><label class="etiqueta text-dark fs-6 mb-1">NO. OFICIO / MEMORÁNDUM</label><input type="text" class="form-control" id="txtNumOficioExtra"></div></div><div class="col-md-6"><label class="etiqueta text-dark fs-6 mb-1">LISTA DE RAYA</label><div class="btn-scan" id="btnScanExtra" onclick="triggerFile('Extra')"><i class="bi bi-camera-fill fs-5 d-block"></i><span id="lblScanExtra">Escanear</span></div><input type="file" id="fileExtra" class="input-file-oculto" accept=".pdf,image/*" onchange="fileSelected('Extra')"></div></div>
                                         <button class="btn btn-success w-100 fw-bold mt-4" onclick="guardarMov('HORAS_EXTRA', 'Extra')">REGISTRAR PAGO EXTRA</button>
                                     </div>
                                 </div>
@@ -678,6 +655,65 @@
         return { texto: 'ACTIVO', clase: 'estatus-activo' };
     }
 
+    // --- NUEVA LÓGICA ARTÍCULO 100 ---
+    async function guardarIncapacidad() {
+        if(!validarSesion()) return;
+
+        const dias = parseFloat(document.getElementById('txtDiasIncap').value) || 0;
+        const tipo = document.getElementById('cmbTipoIncap').value;
+
+        // CÁLCULO DE ANTIGÜEDAD
+        let antiguedad = 0;
+        if(empleadoActual.fechaAlta) {
+            let fa = empleadoActual.fechaAlta;
+            if(fa && fa.toDate) fa = fa.toDate(); 
+            else fa = new Date(fa);
+            
+            const hoy = new Date();
+            if(!isNaN(fa.getTime())) {
+                const diffTime = Math.abs(hoy - fa);
+                antiguedad = diffTime / (1000 * 60 * 60 * 24 * 365.25); 
+            }
+        }
+
+        // LÍMITES POR LEY
+        let limite = 15; // Default < 1 año
+        if (antiguedad >= 1 && antiguedad < 5) limite = 30;
+        else if (antiguedad >= 5 && antiguedad < 10) limite = 45;
+        else if (antiguedad >= 10) limite = 60;
+
+        if(tipo === "ENFERMEDAD GENERAL") {
+            const acumulado = (empleadoActual.saldoIncap || 0);
+            const nuevoTotal = acumulado + dias;
+            
+            if (nuevoTotal > limite) { 
+                const msg = `
+                    <b>Antigüedad:</b> ${antiguedad.toFixed(1)} años<br>
+                    <b>Límite permitido:</b> ${limite} días<br>
+                    <b>Acumulado actual:</b> ${acumulado} días<br>
+                    <b>Nuevo total:</b> ${nuevoTotal} días<br><br>
+                    ¿Deseas registrar la incapacidad excediendo el límite?
+                `;
+                
+                const result = await Swal.fire({ 
+                    icon: 'warning', 
+                    title: '¡ALERTA ARTÍCULO 100!', 
+                    html: msg, 
+                    showCancelButton: true, 
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Sí, registrar',
+                    cancelButtonText: 'Cancelar'
+                });
+                
+                if(!result.isConfirmed) return;
+            }
+        }
+        
+        // Proceder a guardar
+        guardarMov("INCAPACIDAD", "Incap"); 
+    }
+
     async function guardarMov(tipo, sufijo) {
         if(!validarSesion()) return;
         
@@ -771,7 +807,7 @@
     
     // Wrapper functions
     function guardarVacaciones() { guardarMov('VACACIONES', 'Vac'); }
-    function guardarIncapacidad() { guardarMov('INCAPACIDAD', 'Incap'); }
+    // GUARDAR INCAPACIDAD YA NO ES WRAPPER, TIENE SU PROPIA LÓGICA ARRIBA
     function guardarPermiso() { guardarMov(document.getElementById('cmbTipoPermiso').value, 'Permiso'); }
 
     async function registrarAlta() {
@@ -936,7 +972,11 @@
             });
             window.datosReporteActual = dataExport;
             document.getElementById('repContador').innerText = `Resultados: ${dataExport.length}`;
+            // document.getElementById('btnCargarMas').style.display = 'inline-block'; // Paginacion simulada
             mostrarLoader(false);
+        }).catch(error => {
+            mostrarLoader(false);
+            Swal.fire("Error", error.message, "error");
         });
     }
     
@@ -988,7 +1028,7 @@
                 oficio: "CAMBIO A " + nuevoEstatus,
                 fechaInicio: fechaHoy,
                 fechaFin: fechaHoy, 
-                urlEvidencia: url || "",
+                urlEvidencia: url,
                 fechaRegistro: firebase.firestore.FieldValue.serverTimestamp()
             });
 

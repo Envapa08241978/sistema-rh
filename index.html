@@ -96,7 +96,7 @@
     <div class="d-flex align-items-center gap-3">
         <div class="text-end d-none d-md-block">
             <span class="d-block fw-bold" id="fechaSistema"></span>
-            <span class="badge bg-warning text-dark border border-white">SISTEMA v71.0 (REPORTS FIX)</span>
+            <span class="badge bg-warning text-dark border border-white">SISTEMA v73.0 (LOADER FIX)</span>
         </div>
         <button class="btn btn-outline-light rounded-circle" onclick="location.reload()" title="Recargar"><i class="bi bi-arrow-clockwise"></i></button>
     </div>
@@ -200,6 +200,7 @@
                                     <input type="number" class="form-control form-control-sm mb-2" id="txtDiasVac" placeholder="Días" oninput="calcFechas('Vac','H')">
                                     <div class="row g-1"><div class="col-6"><input type="date" class="form-control form-control-sm" id="txtFechaVac" onchange="calcFechas('Vac','H')"></div><div class="col-6"><input type="date" class="form-control form-control-sm input-calc" id="txtFechaFinVac" readonly></div></div>
                                     <input type="text" class="form-control form-control-sm mt-2" id="txtNumOficioVac" placeholder="No. Oficio">
+                                    <!-- BOTÓN CORREGIDO -->
                                     <div class="btn-scan mt-2" id="btnScanVac" onclick="triggerFile('Vac')"><i class="bi bi-paperclip"></i> <span id="lblScanVac">Adjuntar Oficio</span></div>
                                     <input type="file" id="fileVac" style="display:none" accept="image/*,.pdf" onchange="fileSelected('Vac')">
                                     <button class="btn btn-primary btn-sm w-100 mt-3" onclick="guardarMov('VACACIONES', 'Vac')">GUARDAR</button>
@@ -212,6 +213,7 @@
                                     <div class="row g-1"><div class="col-6"><input type="date" class="form-control form-control-sm" id="txtFechaIncap" onchange="calcFechas('Incap','N')"></div><div class="col-6"><input type="date" class="form-control form-control-sm input-calc" id="txtFechaFinIncap" readonly></div></div>
                                     <input type="text" class="form-control form-control-sm mt-2" id="txtNumOficioIncap" placeholder="No. Oficio">
                                     <input type="text" class="form-control form-control-sm mt-2" id="txtFolioIncap" placeholder="Folio Médico">
+                                    <!-- BOTÓN CORREGIDO -->
                                     <div class="btn-scan mt-2" id="btnScanIncap" onclick="triggerFile('Incap')"><i class="bi bi-paperclip"></i> <span id="lblScanIncap">Adjuntar Incap.</span></div>
                                     <input type="file" id="fileIncap" style="display:none" accept="image/*,.pdf" onchange="fileSelected('Incap')">
                                     <button class="btn btn-warning btn-sm w-100 mt-3" onclick="guardarMov('INCAPACIDAD', 'Incap')">GUARDAR</button>
@@ -231,6 +233,7 @@
                                     <div class="row g-1"><div class="col-6"><input type="date" class="form-control form-control-sm" id="txtFechaPermiso" onchange="calcFechas('Permiso','H')"></div><div class="col-6"><input type="date" class="form-control form-control-sm input-calc" id="txtFechaFinPermiso" readonly></div></div>
                                     <input type="text" class="form-control form-control-sm mt-2" id="txtNumOficioPermiso" placeholder="No. Oficio">
                                     <input type="text" class="form-control form-control-sm mt-2" id="txtMotivoPermiso" placeholder="Motivo">
+                                    <!-- BOTÓN CORREGIDO -->
                                     <div class="btn-scan mt-2" id="btnScanPermiso" onclick="triggerFile('Permiso')"><i class="bi bi-paperclip"></i> <span id="lblScanPermiso">Adjuntar Justif.</span></div>
                                     <input type="file" id="filePermiso" style="display:none" accept="image/*,.pdf" onchange="fileSelected('Permiso')">
                                     <button class="btn btn-dark btn-sm w-100 mt-3" onclick="guardarPermiso()">GUARDAR</button>
@@ -294,7 +297,7 @@
                             </div>
                          </div>
                          
-                        <!-- 5. REPORTES (MEJORADO V71) -->
+                        <!-- 5. REPORTES (MEJORADO V73 - CORRECCIÓN SPINNER) -->
                         <div class="tab-pane fade" id="reportes">
                             <div class="card border-0 p-3">
                                 <div class="row g-2">
@@ -322,7 +325,7 @@
                                 </div>
                                 <div class="table-responsive mt-2" style="max-height: 400px; overflow-y: auto;">
                                     <table class="table table-sm table-striped table-hover">
-                                        <thead class="table-dark sticky-top"><tr><th>Fecha</th><th>Empleado</th><th>Tipo</th><th>Días</th><th>Detalle</th><th>Link</th></tr></thead>
+                                        <thead class="table-dark sticky-top"><tr><th>Fecha</th><th>Fin</th><th>Empleado</th><th>Tipo</th><th>Días</th><th>Oficio</th><th>Detalle</th><th>Link</th></tr></thead>
                                         <tbody id="tablaReportesBody"></tbody>
                                     </table>
                                 </div>
@@ -417,11 +420,11 @@
     // --- 1. CONFIGURACIÓN DE FIREBASE (PEGA TUS LLAVES AQUÍ) ---
     const firebaseConfig = {
       apiKey: "AIzaSyD0rc64cfBhBsNtJCMyDCNbc5qXv5wNlVU",
-      authDomain: "nuevo-proyecto-92479.firebaseapp.com",
-      projectId: "nuevo-proyecto-92479",
-      storageBucket: "nuevo-proyecto-92479.firebasestorage.app", 
-      messagingSenderId: "798385147161",
-      appId: "1:798385147161:web:bb909d1e4c95708c2b8988"
+  authDomain: "nuevo-proyecto-92479.firebaseapp.com",
+  projectId: "nuevo-proyecto-92479",
+  storageBucket: "nuevo-proyecto-92479.firebasestorage.app",
+  messagingSenderId: "798385147161",
+  appId: "1:798385147161:web:bb909d1e4c95708c2b8988"
     };
 
     function initApp() {
@@ -758,149 +761,106 @@
         } catch(e) { mostrarLoader(false); Swal.fire("Error", e.message, "error"); }
     }
 
-    // --- REPORTEADOR MEJORADO ---
-    function construirQueryReporte() {
-        const fIni = document.getElementById('repFechaIni').value;
-        const fFin = document.getElementById('repFechaFin').value;
-        const emp = document.getElementById('repEmpleado').value.toUpperCase();
-        const tipo = document.getElementById('repTipo').value;
-        
-        let query = db.collection("movimientos");
-        
-        // Filtro de Fecha (Obligatorio para indexación eficiente)
-        if(fIni) query = query.where('fechaInicio', '>=', fIni);
-        if(fFin) query = query.where('fechaInicio', '<=', fFin);
-        
-        // Filtro de Tipo (Si no es TODOS)
-        if(tipo !== 'TODOS' && !tipo.includes('PERMISOS')) { 
-             query = query.where('tipo', '==', tipo);
-        }
-        
-        // Ordenar (Requiere índice compuesto)
-        query = query.orderBy('fechaInicio', 'desc');
-        
-        return query;
-    }
-
+    // --- REPORTES ---
     function generarReporte(cargarMas = false) {
         const fIni = document.getElementById('repFechaIni').value;
-        if(!fIni) { Swal.fire("Fecha Inicio requerida", "", "warning"); return; }
+        const fFin = document.getElementById('repFechaFin').value;
+        if(!fIni || !fFin) { Swal.fire("Fechas requeridas", "", "warning"); return; }
         
         mostrarLoader(true);
         
-        let query = construirQueryReporte();
+        // CORRECCIÓN: PAGINACIÓN Y FILTROS EN CLIENTE (MÁS SEGURO PARA ÍNDICES)
+        // Para evitar problemas de índice complejo en esta versión, bajamos un bloque y filtramos.
+        // Si necesitas paginación real de servidor, requerimos crear índice. Aquí usamos cliente.
         
-        // Paginación
-        if(cargarMas && lastVisibleReporte) {
-            query = query.startAfter(lastVisibleReporte);
-        }
-        
-        query.limit(50).get().then(qs => {
-            const tbody = document.getElementById('tablaReportesBody');
-            if(!cargarMas) tbody.innerHTML = ""; // Limpiar si es búsqueda nueva
-            
-            lastVisibleReporte = qs.docs[qs.docs.length - 1]; // Guardar último cursor
-            
-            if(qs.empty) {
-                if(!cargarMas) document.getElementById('repContador').innerText = "Sin resultados";
-                document.getElementById('btnCargarMas').style.display = 'none';
-                mostrarLoader(false);
-                return;
-            }
-
-            const empFilter = document.getElementById('repEmpleado').value.toUpperCase();
-            let count = 0;
-
-            qs.forEach(doc => {
-                const d = doc.data();
-                // Filtro Cliente
-                let pasaFiltro = true;
-                if(empFilter && !d.nombreEmpleado.includes(empFilter) && !d.empleadoId.includes(empFilter)) pasaFiltro = false;
+        db.collection("movimientos")
+            .where('fechaInicio', '>=', fIni)
+            .where('fechaInicio', '<=', fFin)
+            .limit(200) // Traer un bloque razonable
+            .get().then(qs => {
+                const tbody = document.getElementById('tablaReportesBody');
+                if(!cargarMas) tbody.innerHTML = "";
                 
+                let dataExport = [];
+                const empFilter = document.getElementById('repEmpleado').value.toUpperCase();
                 const tipoSel = document.getElementById('repTipo').value;
-                if(tipoSel === 'PERMISOS') {
-                    if(['VACACIONES','INCAPACIDAD','ALTA','HORAS_EXTRA','BAJA'].includes(d.tipo)) pasaFiltro = false;
-                }
-                
-                if(pasaFiltro) {
-                    let link = '-';
-                    if(d.urlEvidencia) {
-                         if(d.urlEvidencia.startsWith('http')) {
-                            link = `<button class="btn btn-sm btn-link" onclick="window.open('${d.urlEvidencia}', '_blank')"><i class="bi bi-eye"></i></button>`;
+
+                qs.forEach(doc => {
+                    const d = doc.data();
+                    let pasa = true;
+                    
+                    if(empFilter && !d.nombreEmpleado.includes(empFilter) && !d.empleadoId.includes(empFilter)) pasa = false;
+                    
+                    if(tipoSel !== 'TODOS') {
+                         if(tipoSel === 'PERMISOS') {
+                             if(['VACACIONES','INCAPACIDAD','ALTA','HORAS_EXTRA','BAJA'].includes(d.tipo)) pasa = false;
                          } else {
-                            link = `<button class="btn btn-sm btn-link" onclick="abrirBase64('${doc.id}')"><i class="bi bi-eye"></i></button>`;
+                             if(d.tipo !== tipoSel) pasa = false;
                          }
                     }
-                    tbody.innerHTML += `<tr><td>${d.fechaInicio}</td><td>${d.nombreEmpleado}</td><td>${d.tipo}</td><td>${d.dias}</td><td>${d.oficio}</td><td>${d.motivo || d.folioMedico || ""}</td><td>${link}</td></tr>`;
-                    count++;
-                }
+
+                    if(pasa) {
+                        let link = '-';
+                        if(d.urlEvidencia) {
+                             if(d.urlEvidencia.startsWith('http')) {
+                                link = `<button class="btn btn-sm btn-link" onclick="window.open('${d.urlEvidencia}', '_blank')"><i class="bi bi-eye"></i></button>`;
+                             } else {
+                                link = `<button class="btn btn-sm btn-link" onclick="abrirBase64('${doc.id}')"><i class="bi bi-eye"></i></button>`;
+                             }
+                        }
+                        // AQUÍ ESTÁ EL CAMBIO SOLICITADO: Nueva Columna Fin + Detalle
+                        tbody.innerHTML += `<tr>
+                            <td>${d.fechaInicio}</td>
+                            <td>${d.fechaFin || '-'}</td>
+                            <td>${d.nombreEmpleado}</td>
+                            <td>${d.tipo}</td>
+                            <td>${d.dias}</td>
+                            <td>${d.oficio}</td>
+                            <td>${d.motivo || d.folioMedico || ""}</td>
+                            <td>${link}</td>
+                        </tr>`;
+                        dataExport.push(d);
+                    }
+                });
+                
+                window.datosReporteActual = dataExport;
+                document.getElementById('repContador').innerText = `Resultados: ${dataExport.length}`;
+                mostrarLoader(false);
+            })
+            .catch(error => {
+                mostrarLoader(false);
+                // Si pide índice, avisar
+                if(error.code === 'failed-precondition') Swal.fire("Requiere Índice", "Abre la consola (F12) y haz clic en el enlace de Firebase.", "info");
+                else Swal.fire("Error", error.message, "error");
             });
-            
-            document.getElementById('btnCargarMas').style.display = 'inline-block';
-            mostrarLoader(false);
-        }).catch(error => {
-            console.error(error);
-            mostrarLoader(false);
-            if(error.code === 'failed-precondition') {
-                 Swal.fire("Falta Índice", "Abre la consola (F12) y haz clic en el enlace de Firebase para crear el índice compuesto.", "error");
-            } else {
-                 Swal.fire("Error", error.message, "error");
-            }
-        });
     }
     
-    function cargarMasReportes() {
-        generarReporte(true);
-    }
-    
-    async function descargarExcel() {
-        const fIni = document.getElementById('repFechaIni').value;
-        if(!fIni) { Swal.fire("Fecha Inicio requerida", "", "warning"); return; }
+    // CORRECCIÓN: EXCEL CON FECHA FIN
+    function descargarExcel() {
+        if(!window.datosReporteActual || window.datosReporteActual.length === 0) { 
+            mostrarLoader(false);
+            Swal.fire("Sin datos", "Genera un reporte primero", "warning"); 
+            return; 
+        }
         
         mostrarLoader(true);
-        Swal.fire({title: 'Generando Excel...', text: 'Descargando todos los registros (Máx 5000), espera un momento.', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }});
-        
-        // Query para Exportación (Límite mayor)
-        let query = construirQueryReporte().limit(5000); 
-        
-        try {
-            const qs = await query.get();
-            let dataExport = [];
-            const empFilter = document.getElementById('repEmpleado').value.toUpperCase();
-            const tipoSel = document.getElementById('repTipo').value;
+        const dataExport = window.datosReporteActual.map(d => ({
+            "Fecha Inicio": d.fechaInicio,
+            "Fecha Fin": d.fechaFin || '', // COLUMNA AGREGADA
+            ID: d.empleadoId,
+            Nombre: d.nombreEmpleado,
+            Tipo: d.tipo,
+            "Días": d.dias,
+            Oficio: d.oficio,
+            Detalle: d.motivo || d.folioMedico || ""
+        }));
 
-            qs.forEach(doc => {
-                const d = doc.data();
-                let pasaFiltro = true;
-                if(empFilter && !d.nombreEmpleado.includes(empFilter)) pasaFiltro = false;
-                if(tipoSel === 'PERMISOS' && ['VACACIONES','INCAPACIDAD'].includes(d.tipo)) pasaFiltro = false;
-                
-                if(pasaFiltro) {
-                    dataExport.push({
-                        Fecha: d.fechaInicio,
-                        ID: d.empleadoId,
-                        Nombre: d.nombreEmpleado,
-                        Tipo: d.tipo,
-                        Días: d.dias,
-                        Oficio: d.oficio,
-                        Detalle: d.motivo || d.folioMedico || ""
-                    });
-                }
-            });
-            
-            if(dataExport.length === 0) { Swal.fire("Sin datos", "", "info"); return; }
-            
-            const ws = XLSX.utils.json_to_sheet(dataExport);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Reporte_RH");
-            XLSX.writeFile(wb, "Reporte_Completo_RH.xlsx");
-            
-            Swal.close();
-            
-        } catch(error) {
-            console.error(error);
-            Swal.fire("Error exportando", error.message, "error");
-        }
+        const ws = XLSX.utils.json_to_sheet(dataExport);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Reporte_RH");
+        XLSX.writeFile(wb, "Reporte_Completo_RH.xlsx");
+        
+        mostrarLoader(false);
     }
     
     // --- ACTUALIZAR ESTATUS (BAJA) ---

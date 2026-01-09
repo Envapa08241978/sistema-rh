@@ -5,8 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema RH - Municipio de Navojoa</title>
     
-    <!-- Bootstrap 5 & Icons -->
+    <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Iconos -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     
     <!-- Librerías Externas -->
@@ -99,7 +100,7 @@
     <div class="d-flex align-items-center gap-3">
         <div class="text-end d-none d-md-block">
             <span class="d-block fw-bold" id="fechaSistema"></span>
-            <span class="badge bg-warning text-dark border border-white">SISTEMA v76.0 (ALTA FIX)</span>
+            <span class="badge bg-warning text-dark border border-white">SISTEMA v79.0 (BUCKET FIX)</span>
         </div>
         <button class="btn btn-outline-light rounded-circle" onclick="location.reload()" title="Recargar"><i class="bi bi-arrow-clockwise"></i></button>
     </div>
@@ -396,7 +397,8 @@
       apiKey: "AIzaSyD0rc64cfBhBsNtJCMyDCNbc5qXv5wNlVU",
       authDomain: "nuevo-proyecto-92479.firebaseapp.com",
       projectId: "nuevo-proyecto-92479",
-      storageBucket: "nuevo-proyecto-92479.firebasestorage.app", 
+      // Bucket actualizado con el nombre correcto de tu proyecto activo (con billing)
+      storageBucket: "media-nuevo-proyecto-92479-2ecf", 
       messagingSenderId: "798385147161",
       appId: "1:798385147161:web:bb909d1e4c95708c2b8988"
     };
@@ -409,17 +411,16 @@
         mostrarLoader(false);
     }
 
-    // --- SUBIDA A STORAGE CON TIMEOUT ---
+    // --- SUBIDA A STORAGE ---
     async function subirArchivoStorage(file, path) {
-        // Límite 20MB
+        // Se permite hasta 20MB. El bucket real soporta hasta 5TB, pero el navegador puede sufrir.
         if(file.size > 20 * 1024 * 1024) throw new Error("Archivo excede 20MB.");
-        
         const ref = storage.ref().child(path);
         
         // Timeout Promise Race
         const uploadTask = ref.put(file);
         const timeoutPromise = new Promise((_, reject) => 
-            setTimeout(() => reject(new Error("Tiempo de espera agotado (45s). Revisa tu conexión.")), 45000)
+            setTimeout(() => reject(new Error("Tiempo de espera agotado. Revisa tu conexión.")), 60000)
         );
 
         await Promise.race([uploadTask, timeoutPromise]);
@@ -637,10 +638,7 @@
                 url = await subirArchivoStorage(file, path);
             } catch (err) {
                 console.error("Fallo Storage:", err);
-                // PLAN B: PREGUNTAR AL USUARIO
-                if(!confirm(`Error subiendo archivo: ${err.message}\n\n¿Deseas guardar el registro SIN el archivo?`)) {
-                    mostrarLoader(false); return;
-                }
+                throw new Error("Error crítico: No se pudo subir el archivo a la nube. Verifique su conexión.");
             }
             
             mostrarLoader(true, "Guardando registro...");
@@ -695,22 +693,25 @@
             const snap = await db.collection("empleados").doc(id).get();
             if(snap.exists) throw new Error("ID ya existe");
             
-            mostrarLoader(true, "Subiendo contrato...");
+            mostrarLoader(true, "Subiendo contrato (Obligatorio)...");
             let url = "";
             try {
                 url = await subirArchivoStorage(file, `contratos/${id}_${Date.now()}.pdf`);
             } catch(err) {
-                 if(!confirm(`Error subiendo contrato: ${err.message}\n\n¿Registrar empleado SIN contrato?`)) {
-                    mostrarLoader(false); return;
-                }
+                 throw new Error("La subida del contrato falló. No se puede registrar sin contrato.");
             }
             
             mostrarLoader(true, "Guardando empleado...");
-            // Sanitización básica
-            const val = (id) => document.getElementById(id).value || "";
+            // Sanitización básica y robusta
+            const val = (id) => { 
+                const el = document.getElementById(id); 
+                if(!el) return "";
+                // Si es fecha, devolvemos valor directo, si es texto, mayúsculas
+                return el.type === 'date' ? el.value : el.value.trim().toUpperCase(); 
+            };
 
             const nuevo = {
-                id: id, nombre: val('altaNombre').toUpperCase(),
+                id: id, nombre: val('altaNombre'),
                 fechaAlta: val('altaFecha'),
                 depto: val('altaDepto'),
                 puesto: val('altaPuesto'),
@@ -777,44 +778,87 @@
         // Query simple + Filtro JS
         db.collection("movimientos").limit(200).get().then(qs => {
             const tbody = document.getElementById('tablaReportesBody');
-            tbody.innerHTML = "";
-            let dataExport = [];
+            if(!cargarMas) tbody.innerHTML = "";
             
+            let dataExport = [];
+            const empFilter = document.getElementById('repEmpleado').value.toUpperCase();
+            const tipoSel = document.getElementById('repTipo').value;
+
             qs.forEach(doc => {
                 const d = doc.data();
-                if(d.fechaInicio >= fIni && d.fechaInicio <= fFin) {
-                    // Aplicar filtros extra aqui (empleado, tipo)
-                     tbody.innerHTML += `<tr><td>${d.fechaInicio}</td><td>${d.fechaFin||''}</td><td>${d.nombreEmpleado}</td><td>${d.tipo}</td><td>${d.dias}</td><td>${d.oficio}</td><td>${d.motivo||d.folioMedico||''}</td><td>-</td></tr>`;
-                     dataExport.push(d);
+                let pasa = true;
+                
+                if(d.fechaInicio < fIni || d.fechaInicio > fFin) pasa = false;
+                if(empFilter && !d.nombreEmpleado.includes(empFilter) && !d.empleadoId.includes(empFilter)) pasa = false;
+                
+                if(tipoSel !== 'TODOS') {
+                     if(tipoSel === 'PERMISOS') {
+                         if(['VACACIONES','INCAPACIDAD','ALTA','HORAS_EXTRA','BAJA'].includes(d.tipo)) pasa = false;
+                     } else {
+                         if(d.tipo !== tipoSel) pasa = false;
+                     }
+                }
+
+                if(pasa) {
+                    let link = '-';
+                    if(d.urlEvidencia) {
+                         if(d.urlEvidencia.startsWith('http')) {
+                            link = `<button class="btn btn-sm btn-link" onclick="window.open('${d.urlEvidencia}', '_blank')"><i class="bi bi-eye"></i></button>`;
+                         } else {
+                            link = `<button class="btn btn-sm btn-link" onclick="abrirBase64('${doc.id}')"><i class="bi bi-eye"></i></button>`;
+                         }
+                    }
+                    // AQUÍ ESTÁ EL CAMBIO SOLICITADO: Nueva Columna Fin + Detalle
+                    tbody.innerHTML += `<tr>
+                        <td>${d.fechaInicio}</td>
+                        <td>${d.fechaFin || '-'}</td>
+                        <td>${d.nombreEmpleado}</td>
+                        <td>${d.tipo}</td>
+                        <td>${d.dias}</td>
+                        <td>${d.oficio}</td>
+                        <td>${d.motivo || d.folioMedico || ""}</td>
+                        <td>${link}</td>
+                    </tr>`;
+                    dataExport.push(d);
                 }
             });
+            
             window.datosReporteActual = dataExport;
             document.getElementById('repContador').innerText = `Resultados: ${dataExport.length}`;
+            // document.getElementById('btnCargarMas').style.display = 'inline-block'; // Paginacion simulada
             mostrarLoader(false);
+        }).catch(error => {
+            mostrarLoader(false);
+            Swal.fire("Error", error.message, "error");
         });
     }
     
+    // CORRECCIÓN: EXCEL CON FECHA FIN
     function descargarExcel() {
-        if(!window.datosReporteActual || window.datosReporteActual.length === 0) { Swal.fire("Sin datos", "Genera un reporte primero", "warning"); return; }
+        if(!window.datosReporteActual || window.datosReporteActual.length === 0) { 
+            mostrarLoader(false);
+            Swal.fire("Sin datos", "Genera un reporte primero", "warning"); 
+            return; 
+        }
         
-        // Mapeo para Excel
-        const datosParaExcel = window.datosReporteActual.map(d => ({
+        mostrarLoader(true);
+        const dataExport = window.datosReporteActual.map(d => ({
             "Fecha Inicio": d.fechaInicio,
-            "Fecha Fin": d.fechaFin || "",
-            "ID Empleado": d.empleadoId,
-            "Nombre": d.nombreEmpleado,
-            "Tipo Incidencia": d.tipo,
+            "Fecha Fin": d.fechaFin || '', // COLUMNA AGREGADA
+            ID: d.empleadoId,
+            Nombre: d.nombreEmpleado,
+            Tipo: d.tipo,
             "Días": d.dias,
-            "Oficio": d.oficio,
-            "Detalle": d.motivo || d.folioMedico || ""
+            Oficio: d.oficio,
+            Detalle: d.motivo || d.folioMedico || ""
         }));
 
-        const ws = XLSX.utils.json_to_sheet(datosParaExcel);
+        const ws = XLSX.utils.json_to_sheet(dataExport);
         const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Reporte");
-        XLSX.writeFile(wb, "Reporte_RH.xlsx");
+        XLSX.utils.book_append_sheet(wb, ws, "Reporte_RH");
+        XLSX.writeFile(wb, "Reporte_Completo_RH.xlsx");
         
-        mostrarLoader(false); // Asegurar que quite el loader
+        mostrarLoader(false);
     }
     
     // --- ACTUALIZAR ESTATUS (BAJA) ---
@@ -832,7 +876,8 @@
         try {
             let url = "";
             if(file) {
-                 url = await subirArchivoStorage(file, `evidencias/${empleadoActual.id}/${Date.now()}_BAJA_${file.name}`);
+                 if(file.size > 800 * 1024) throw new Error("Archivo > 800KB");
+                 url = await readFileAsBase64(file);
             }
 
             const fechaHoy = new Date().toISOString().split('T')[0];
@@ -845,7 +890,7 @@
                 oficio: "CAMBIO A " + nuevoEstatus,
                 fechaInicio: fechaHoy,
                 fechaFin: fechaHoy, 
-                urlEvidencia: url || "",
+                urlEvidencia: url,
                 fechaRegistro: firebase.firestore.FieldValue.serverTimestamp()
             });
 

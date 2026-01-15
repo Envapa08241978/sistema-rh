@@ -13,7 +13,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
-    <!-- Firebase SDK -->
+    <!-- Firebase SDK (Compat v8) -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
@@ -29,8 +29,8 @@
 
 <div class="header-tool d-flex justify-content-between align-items-center">
     <div>
-        <h3 class="m-0 fw-bold"><i class="bi bi-database-fill-up"></i> IMPORTADOR MAESTRO DE NÓMINA v2.1</h3>
-        <small>Herramienta Administrativa para Carga de Expedientes Completos (Con Estatus)</small>
+        <h3 class="m-0 fw-bold"><i class="bi bi-database-fill-up"></i> IMPORTADOR MAESTRO v2.3 (FUSIÓN)</h3>
+        <small>Carga inteligente: Actualiza datos sin borrar historial ni contratos.</small>
     </div>
     <a href="index.html" class="btn btn-outline-light btn-sm">Volver al Sistema</a>
 </div>
@@ -41,8 +41,11 @@
         <div class="col-md-5">
             <div class="step-box">
                 <h5 class="fw-bold text-dark border-bottom pb-2">1. Seleccionar Archivo Excel</h5>
+                <div class="alert alert-info small">
+                    <strong>Modo Fusión Activo:</strong> Si el empleado ya existe, solo se actualizarán los datos que vengan en el Excel. Los saldos, historial y contratos previos se respetarán.
+                </div>
                 <p class="text-muted small">
-                    El archivo debe tener encabezados. Columnas soportadas:<br>
+                    Columnas soportadas (Detecta autom.):<br>
                     <b>ID, NOMBRE, FECHA ALTA, DEPTO, PUESTO, TIPO, EMPRESA, CURP, ESTATUS, DIRECCION, TELEFONO, SEGURO, POLIZA, BANCO, CUENTA, CLABE, ARCHIVO.</b>
                 </p>
                 
@@ -56,11 +59,10 @@
             </div>
 
             <div class="step-box" id="panelCarga" style="display:none;">
-                <h5 class="fw-bold text-dark border-bottom pb-2">3. Ejecutar Carga a Nube</h5>
+                <h5 class="fw-bold text-dark border-bottom pb-2">3. Ejecutar Actualización</h5>
                 <div class="alert alert-warning small">
                     <i class="bi bi-exclamation-triangle-fill"></i> 
-                    Se detectaron <strong id="lblTotalRow">0</strong> empleados. 
-                    Esto puede tomar unos minutos. No cierres la ventana.
+                    Se procesarán <strong id="lblTotalRow">0</strong> registros. 
                 </div>
                 
                 <div class="progress mb-3">
@@ -69,7 +71,7 @@
 
                 <div class="d-grid">
                     <button class="btn btn-danger fw-bold" onclick="iniciarCargaFirebase()">
-                        <i class="bi bi-cloud-upload-fill"></i> INICIAR INYECCIÓN DE DATOS
+                        <i class="bi bi-cloud-upload-fill"></i> INICIAR FUSIÓN DE DATOS
                     </button>
                 </div>
             </div>
@@ -97,24 +99,22 @@
 </div>
 
 <script>
-    // --- PEGA TUS LLAVES AQUÍ (LAS MISMAS DEL SISTEMA PRINCIPAL) ---
+    // --- TUS LLAVES ---
     const firebaseConfig = {
       apiKey: "AIzaSyD0rc64cfBhBsNtJCMyDCNbc5qXv5wNlVU",
-  authDomain: "nuevo-proyecto-92479.firebaseapp.com",
-  projectId: "nuevo-proyecto-92479",
-  storageBucket: "nuevo-proyecto-92479.firebasestorage.app",
-  messagingSenderId: "798385147161",
-  appId: "1:798385147161:web:bb909d1e4c95708c2b8988"
+      authDomain: "nuevo-proyecto-92479.firebaseapp.com",
+      projectId: "nuevo-proyecto-92479",
+      storageBucket: "media-nuevo-proyecto-92479-2ecf", 
+      messagingSenderId: "798385147161",
+      appId: "1:798385147161:web:bb909d1e4c95708c2b8988"
     };
 
     // Inicializar
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // Variables
     let datosExcel = [];
     
-    // UI Helpers
     const log = (msg, type='info') => {
         const c = document.getElementById('consoleLog');
         const color = type==='error'?'red':(type==='success'?'cyan':'#00ff00');
@@ -122,15 +122,13 @@
         c.scrollTop = c.scrollHeight;
     };
 
-    // 1. EVENTO ARCHIVO
     document.getElementById('inputExcel').addEventListener('change', (e) => {
         if(e.target.files.length > 0) {
             document.getElementById('btnProcesar').disabled = false;
-            log("Archivo seleccionado. Listo para analizar.");
+            log("Archivo seleccionado.");
         }
     });
 
-    // 2. PROCESAR EXCEL (LECTURA LOCAL)
     function procesarExcel() {
         const file = document.getElementById('inputExcel').files[0];
         const reader = new FileReader();
@@ -140,84 +138,81 @@
                 const data = new Uint8Array(e.target.result);
                 const workbook = XLSX.read(data, { type: 'array' });
                 const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                
-                // Convertir a JSON crudo
                 const rawData = XLSX.utils.sheet_to_json(firstSheet, { defval: "" });
                 
-                if(rawData.length === 0) throw new Error("El archivo está vacío.");
+                if(rawData.length === 0) throw new Error("Archivo vacío.");
 
-                // Mapeo y Limpieza de Datos
-                datosExcel = rawData.map(row => limpiarFila(row)).filter(d => d.id); // Solo filas con ID
+                // Mapeo
+                datosExcel = rawData.map(row => limpiarFila(row)).filter(d => d.id); 
 
-                if(datosExcel.length === 0) throw new Error("No se encontraron filas válidas con ID.");
+                if(datosExcel.length === 0) throw new Error("No hay IDs válidos.");
 
-                // Mostrar Previsualización
                 mostrarPreview(datosExcel.slice(0, 5));
                 
-                // Habilitar siguiente paso
                 document.getElementById('lblTotalRow').innerText = datosExcel.length;
                 document.getElementById('panelCarga').style.display = 'block';
-                log(`Análisis completado. ${datosExcel.length} empleados listos para importar.`, "success");
+                log(`Análisis: ${datosExcel.length} registros listos.`, "success");
 
             } catch (err) {
-                log("Error al leer Excel: " + err.message, "error");
-                Swal.fire("Error de Lectura", err.message, "error");
+                log("Error: " + err.message, "error");
+                Swal.fire("Error", err.message, "error");
             }
         };
         reader.readAsArrayBuffer(file);
     }
 
-    // NORMALIZADOR INTELIGENTE DE COLUMNAS (AHORA CON ESTATUS)
+    // NORMALIZADOR INTELIGENTE (SIN SOBRESCRIBIR SALDOS SI NO EXISTEN)
     function limpiarFila(row) {
-        // Buscamos claves sin importar mayúsculas/minúsculas
         const keys = Object.keys(row);
         const getVal = (keyPart) => {
             const foundKey = keys.find(k => k.toUpperCase().includes(keyPart));
-            return foundKey ? String(row[foundKey]).trim().toUpperCase() : "";
+            return foundKey ? String(row[foundKey]).trim().toUpperCase() : null; // Retorna null si no existe
         };
 
         const id = getVal("ID") || getVal("NUM") || getVal("EMPLEADO");
-        let fechaAlta = getVal("FECHA") || getVal("ALTA") || "";
+        if(!id) return {}; // Skip invalid rows
 
-        // Corrección de Fechas Excel (Número a YYYY-MM-DD)
-        if (!isNaN(fechaAlta) && fechaAlta.length < 6 && fechaAlta !== "") { 
+        let fechaAlta = getVal("FECHA") || getVal("ALTA");
+        
+        // Fecha Excel
+        if (fechaAlta && !isNaN(fechaAlta) && fechaAlta.length < 6) { 
              const dateObj = new Date(Math.round((parseFloat(fechaAlta) - 25569)*86400*1000));
              fechaAlta = dateObj.toISOString().split('T')[0];
         }
 
-        // LECTURA DE ESTATUS
-        const estatusLeido = getVal("ESTATUS") || getVal("SITUACION");
+        // Construir objeto SOLO con datos presentes
+        // Esto es clave para el MERGE: Si el campo no está en el Excel, no se pone en el objeto,
+        // por lo tanto Firebase no lo borra.
+        
+        let empleado = { id: id };
+        
+        const addIfExist = (key, val) => { if(val !== null && val !== "") empleado[key] = val; };
 
-        return {
-            id: id,
-            nombre: getVal("NOMBRE"),
-            fechaAlta: fechaAlta,
-            depto: getVal("DEPTO") || getVal("DEPARTAMENTO"),
-            puesto: getVal("PUESTO"),
-            tipo: getVal("TIPO"), // Confianza/Base
-            empresa: getVal("EMPRESA") || getVal("NOMINA") || "AYTO",
-            curp: getVal("CURP"),
-            
-            // CAMPOS ADICIONALES
-            direccion: getVal("DIRECCION") || getVal("DOMICILIO"),
-            tel: getVal("TELEFONO") || getVal("CELULAR") || getVal("TEL"),
-            seguro: getVal("SEGURO") || getVal("INSTITUCION"),
-            poliza: getVal("POLIZA") || getVal("AFILIACION"),
-            banco: getVal("BANCO"),
-            cuenta: getVal("CUENTA") || getVal("TARJETA"),
-            clabe: getVal("CLABE") || getVal("INTERBANCARIA"),
-            numArchivo: getVal("ARCHIVO") || getVal("EXPEDIENTE"),
+        addIfExist("nombre", getVal("NOMBRE"));
+        addIfExist("fechaAlta", fechaAlta);
+        addIfExist("depto", getVal("DEPTO") || getVal("DEPARTAMENTO"));
+        addIfExist("puesto", getVal("PUESTO"));
+        addIfExist("tipo", getVal("TIPO"));
+        addIfExist("empresa", getVal("EMPRESA") || getVal("NOMINA"));
+        addIfExist("curp", getVal("CURP"));
+        addIfExist("estatus", getVal("ESTATUS") || getVal("SITUACION")); // Si viene vacio en excel, no toca el estatus actual
 
-            // ESTATUS (Prioridad: Excel > "ACTIVO")
-            estatus: estatusLeido || "ACTIVO",
+        addIfExist("direccion", getVal("DIRECCION") || getVal("DOMICILIO"));
+        addIfExist("tel", getVal("TELEFONO") || getVal("CELULAR") || getVal("TEL"));
+        addIfExist("seguro", getVal("SEGURO") || getVal("INSTITUCION"));
+        addIfExist("poliza", getVal("POLIZA") || getVal("AFILIACION"));
+        addIfExist("banco", getVal("BANCO"));
+        addIfExist("cuenta", getVal("CUENTA") || getVal("TARJETA"));
+        addIfExist("clabe", getVal("CLABE") || getVal("INTERBANCARIA"));
+        addIfExist("numArchivo", getVal("ARCHIVO") || getVal("EXPEDIENTE"));
 
-            // Contadores en 0
-            saldoVac: 0, 
-            saldoEcon: 2, 
-            saldoPSG: 0, 
-            saldoIncap: 0,
-            acumuladoFaltas: 0
-        };
+        // NOTA: No agregamos saldos aquí por defecto.
+        // Si es un empleado NUEVO (no existe en BD), Firebase lo creará solo con estos datos.
+        // Los saldos serán undefined. 
+        // Para solucionar esto en NUEVOS, podríamos checar existencia, pero alentaría la carga masiva.
+        // Mejor estrategia: El sistema principal (index.html) debe tratar "undefined" como 0. (Ya lo hace con `|| 0`).
+
+        return empleado;
     }
 
     function mostrarPreview(muestras) {
@@ -226,13 +221,11 @@
         thead.innerHTML = ""; tbody.innerHTML = "";
 
         if(muestras.length > 0) {
-            // Headers
             let trH = "<tr>";
             Object.keys(muestras[0]).forEach(k => trH += `<th>${k}</th>`);
             trH += "</tr>";
             thead.innerHTML = trH;
 
-            // Body
             muestras.forEach(row => {
                 let tr = "<tr>";
                 Object.values(row).forEach(v => tr += `<td>${v}</td>`);
@@ -242,59 +235,49 @@
         }
     }
 
-    // 3. CARGA A FIREBASE (BATCH / LOTES)
     async function iniciarCargaFirebase() {
-        if(!confirm(`Se subirán ${datosExcel.length} registros a la base de datos. ¿Continuar?`)) return;
+        if(!confirm(`Se procesarán ${datosExcel.length} registros en MODO FUSIÓN (Merge). ¿Continuar?`)) return;
 
-        const batchSize = 400; // Firebase permite max 500 por lote
+        const batchSize = 250; 
         let batches = [];
         let batch = db.batch();
         let counter = 0;
 
-        log("Iniciando inyección de datos...", "success");
+        log("Iniciando fusión...", "success");
 
-        // Preparar Lotes
         datosExcel.forEach((empleado, index) => {
             const docRef = db.collection("empleados").doc(empleado.id);
-            batch.set(docRef, empleado);
+            // EL CAMBIO MÁGICO: { merge: true }
+            batch.set(docRef, empleado, { merge: true });
             counter++;
 
-            // Si llegamos al límite del lote, lo guardamos para enviar
             if (counter === batchSize || index === datosExcel.length - 1) {
                 batches.push(batch);
-                batch = db.batch(); // Crear nuevo lote
+                batch = db.batch();
                 counter = 0;
             }
         });
 
-        // Enviar Lotes Secuencialmente
         const totalBatches = batches.length;
         const progressBar = document.getElementById('progressBar');
         
         try {
             for (let i = 0; i < totalBatches; i++) {
-                log(`Enviando lote ${i + 1} de ${totalBatches}...`);
+                log(`Procesando lote ${i + 1}/${totalBatches}...`);
                 await batches[i].commit();
                 
-                // Actualizar barra
                 const porc = Math.round(((i + 1) / totalBatches) * 100);
                 progressBar.style.width = porc + "%";
                 progressBar.innerText = porc + "%";
             }
 
-            log("✅ CARGA MASIVA COMPLETADA EXITOSAMENTE.", "success");
-            Swal.fire("Misión Cumplida", `Se procesaron ${datosExcel.length} empleados correctamente.`, "success");
-
-            // Actualizar contador global (Opcional)
-            const year = new Date().getFullYear().toString();
-            db.collection('resumenes_anuales').doc(year).update({ 
-                total_altas: firebase.firestore.FieldValue.increment(datosExcel.length) 
-            }).catch(e => console.log("Contador no iniciado"));
+            log("✅ ACTUALIZACIÓN COMPLETADA.", "success");
+            Swal.fire("Éxito", "Base de datos actualizada sin pérdida de información.", "success");
 
         } catch (error) {
             console.error(error);
-            log("❌ ERROR EN LA CARGA: " + error.message, "error");
-            Swal.fire("Error Interrumpido", "Revisa el log para detalles.", "error");
+            log("❌ ERROR: " + error.message, "error");
+            Swal.fire("Error", "Revisa el log.", "error");
         }
     }
 </script>

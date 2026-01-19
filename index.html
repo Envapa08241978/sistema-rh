@@ -489,7 +489,8 @@
                                                 id="txtFolioIncap" placeholder="Folio Médico">
                                             <div class="btn-scan mt-2" id="btnScanIncap" onclick="triggerFile('Incap')">
                                                 <i class="bi bi-paperclip"></i> <span id="lblScanIncap">Adjuntar
-                                                    Incap.</span></div>
+                                                    Incap.</span>
+                                            </div>
                                             <input type="file" id="fileIncap" style="display:none" accept="image/*,.pdf"
                                                 onchange="fileSelected('Incap')">
                                             <button class="btn btn-warning btn-sm w-100 mt-3"
@@ -596,9 +597,58 @@
                                         <div class="row g-2 mb-2">
                                             <div class="col-4"><select id="altaDepto" class="form-select">
                                                     <option>PRESIDENCIA</option>
-                                                    <option>OBRAS PUBLICAS</option>
-                                                    <option>DIF</option>
-                                                    <option>SEGURIDAD</option>
+                                                    <option>ORGANO DE CONTROL Y EVALUACION GUVERNAMENTAL</option>
+                                                    <option>SINDICATURA</option>
+                                                    <option>SECRETARIA DEL H. AYUNTAMIENTO</option>
+                                                    <option>DIRECCION DE ARCHIVO MUNICIPAL - SECRETARIA DEL H.
+                                                        AYUNTAMIENTO</option>
+                                                    <option>COORDINACION MUNICIPAL DE TRANSPORTE - SECRETARIA DEL H.
+                                                        AYUNTAMIENTO</option>
+                                                    <option>PROFECO - SECRETARIA DEL H. AYUNTAMIENTO</option>
+                                                    <option>DIRECCION DE ASUNTOS RELIGIOSOS - SECRETARIA DEL H.
+                                                        AYUNTAMIENTO</option>
+                                                    <option>JUECES CALIFICADORES - SECRETARIA DEL H. AYUNTAMIENTO
+                                                    </option>
+                                                    <option>TESORERIA MUNICIPAL</option>
+                                                    <option>SECRETARIA DE PROGRAMACION DEL GASTO</option>
+                                                    <option>DIRECCION DE PROGRAMACION DE PRESUPUESTO - SECRETARIA DE
+                                                        PROGRAMACION DEL GASTO</option>
+                                                    <option>DIRECCION DE PLANEACION - SECRETARIA DE PROGRAMACION DEL
+                                                        GASTO</option>
+                                                    <option>DIRECCION DE BIENES Y SERVICIOS - SECRETARIA DE PROGRAMACION
+                                                        DEL GASTO</option>
+                                                    <option>DIRECCION DE RECURSOS HUMANOS - SECRETARIA DE PROGRAMACION
+                                                        DEL GASTO</option>
+                                                    <option>DIRECCION DE INFORMATICA - SECRETARIA DE PROGRAMACION DEL
+                                                        GASTO</option>
+                                                    <option>SECRETARIA DE SERCIVIOS PUBLICOS</option>
+                                                    <option>SECRETARIA DE INFRAESTRUCTURA URBANA</option>
+                                                    <option>DIRECCION DE OBRAS PUBLICAS - SECRETARIA DE INFRAESTRUCTURA
+                                                        URBANA</option>
+                                                    <option>DIRECCION DE DESARROLLO URBANO - SECRETARIA DE
+                                                        INFRAESTRUCTURA URBANA</option>
+                                                    <option>DIRECCION DE ECOLOGIA - SECRETARIA DE INFRAESTRUCTURA URBANA
+                                                    </option>
+                                                    <option>SECRETARIA DE SEGURIDAD PUBLICA</option>
+                                                    <option>SECRETARIA DE DESARROLLO ECONOMICO</option>
+                                                    <option>SECRETARIA DE DESARROLLO SOCIAL</option>
+                                                    <option>DIRECCION DE ATENCION CIUDADANA</option>
+                                                    <option>DIRECCION DE ATENCION A LA MUJER</option>
+                                                    <option>DIRECCION DE COMUNICACIÓN SOCIAL</option>
+                                                    <option>DIRECCION MUNICIPAL DEL DEPORTE</option>
+                                                    <option>DIRECCION DE COMUNIDADES RURALES</option>
+                                                    <option>DIRECCION DE SALUD MUNICIPAL</option>
+                                                    <option>DIRECCION DE EDUCACION Y CULTURA</option>
+                                                    <option>INSTITUTO NAVOJOENSE DE LA JUVENTUD</option>
+                                                    <option>C.M.C.O.P.</option>
+                                                    <option>DIF MUNICIPAL</option>
+                                                    <option>RASTRO MUNICIPAL</option>
+                                                    <option>CUERPO DE BOMBEROS</option>
+                                                    <option>IMPLAN</option>
+                                                    <option>CABILDO</option>
+                                                    <option>RELACIONES EXTERIORES</option>
+                                                    <option>JUBILADOS Y PENSIONADOS</option>
+                                                    <option>TRANSPARENCIA</option>
                                                 </select></div>
                                             <div class="col-4"><input type="text" class="form-control" id="altaPuesto"
                                                     placeholder="Puesto"></div>
@@ -613,8 +663,13 @@
                                                     id="txtNumOficioAlta" placeholder="Nombramiento *"></div>
                                             <div class="col-4"><select id="altaEmpresa" class="form-select">
                                                     <option>AYTO</option>
-                                                    <option>DIF</option>
-                                                    <option>OOMAPAS</option>
+                                                    <option>DIF MUNICIPAL</option>
+                                                    <option>RASTRO</option>
+                                                    <option>IMPLAN</option>
+                                                    <option>CMCOP</option>
+                                                    <option>PENSIONES</option>
+                                                    <option>SEG PUB</option>
+                                                    <option>TEMPORAL</option>
                                                 </select></div>
                                             <div class="col-4"><input type="text" class="form-control"
                                                     id="altaNumArchivo" placeholder="Archivo Físico"></div>
@@ -623,8 +678,7 @@
                                         <div class="row g-2 mb-2">
                                             <div class="col-4"><select id="altaSeguro" class="form-select">
                                                     <option>ISSSTESON</option>
-                                                    <option>IMSS</option>
-                                                    <option>RED BENEFIT</option>
+                                                    <option>REDBENEFIT</option>
                                                 </select></div>
                                             <div class="col-4"><input type="text" class="form-control" id="altaPoliza"
                                                     placeholder="Póliza"></div>
@@ -676,10 +730,58 @@
                                             <div class="col-4"><label class="etiqueta">Depto</label><select
                                                     id="editDepto" class="form-select">
                                                     <option>PRESIDENCIA</option>
-                                                    <option>OBRAS PUBLICAS</option>
-                                                    <option>DIF</option>
-                                                    <option>SEGURIDAD</option>
-                                                    <option>TESORERIA</option>
+                                                    <option>ORGANO DE CONTROL Y EVALUACION GUVERNAMENTAL</option>
+                                                    <option>SINDICATURA</option>
+                                                    <option>SECRETARIA DEL H. AYUNTAMIENTO</option>
+                                                    <option>DIRECCION DE ARCHIVO MUNICIPAL - SECRETARIA DEL H.
+                                                        AYUNTAMIENTO</option>
+                                                    <option>COORDINACION MUNICIPAL DE TRANSPORTE - SECRETARIA DEL H.
+                                                        AYUNTAMIENTO</option>
+                                                    <option>PROFECO - SECRETARIA DEL H. AYUNTAMIENTO</option>
+                                                    <option>DIRECCION DE ASUNTOS RELIGIOSOS - SECRETARIA DEL H.
+                                                        AYUNTAMIENTO</option>
+                                                    <option>JUECES CALIFICADORES - SECRETARIA DEL H. AYUNTAMIENTO
+                                                    </option>
+                                                    <option>TESORERIA MUNICIPAL</option>
+                                                    <option>SECRETARIA DE PROGRAMACION DEL GASTO</option>
+                                                    <option>DIRECCION DE PROGRAMACION DE PRESUPUESTO - SECRETARIA DE
+                                                        PROGRAMACION DEL GASTO</option>
+                                                    <option>DIRECCION DE PLANEACION - SECRETARIA DE PROGRAMACION DEL
+                                                        GASTO</option>
+                                                    <option>DIRECCION DE BIENES Y SERVICIOS - SECRETARIA DE PROGRAMACION
+                                                        DEL GASTO</option>
+                                                    <option>DIRECCION DE RECURSOS HUMANOS - SECRETARIA DE PROGRAMACION
+                                                        DEL GASTO</option>
+                                                    <option>DIRECCION DE INFORMATICA - SECRETARIA DE PROGRAMACION DEL
+                                                        GASTO</option>
+                                                    <option>SECRETARIA DE SERCIVIOS PUBLICOS</option>
+                                                    <option>SECRETARIA DE INFRAESTRUCTURA URBANA</option>
+                                                    <option>DIRECCION DE OBRAS PUBLICAS - SECRETARIA DE INFRAESTRUCTURA
+                                                        URBANA</option>
+                                                    <option>DIRECCION DE DESARROLLO URBANO - SECRETARIA DE
+                                                        INFRAESTRUCTURA URBANA</option>
+                                                    <option>DIRECCION DE ECOLOGIA - SECRETARIA DE INFRAESTRUCTURA URBANA
+                                                    </option>
+                                                    <option>SECRETARIA DE SEGURIDAD PUBLICA</option>
+                                                    <option>SECRETARIA DE DESARROLLO ECONOMICO</option>
+                                                    <option>SECRETARIA DE DESARROLLO SOCIAL</option>
+                                                    <option>DIRECCION DE ATENCION CIUDADANA</option>
+                                                    <option>DIRECCION DE ATENCION A LA MUJER</option>
+                                                    <option>DIRECCION DE COMUNICACIÓN SOCIAL</option>
+                                                    <option>DIRECCION MUNICIPAL DEL DEPORTE</option>
+                                                    <option>DIRECCION DE COMUNIDADES RURALES</option>
+                                                    <option>DIRECCION DE SALUD MUNICIPAL</option>
+                                                    <option>DIRECCION DE EDUCACION Y CULTURA</option>
+                                                    <option>INSTITUTO NAVOJOENSE DE LA JUVENTUD</option>
+                                                    <option>C.M.C.O.P.</option>
+                                                    <option>DIF MUNICIPAL</option>
+                                                    <option>RASTRO MUNICIPAL</option>
+                                                    <option>CUERPO DE BOMBEROS</option>
+                                                    <option>IMPLAN</option>
+                                                    <option>CABILDO</option>
+                                                    <option>RELACIONES EXTERIORES</option>
+                                                    <option>JUBILADOS Y PENSIONADOS</option>
+                                                    <option>TRANSPARENCIA</option>
                                                 </select></div>
                                             <div class="col-4"><label class="etiqueta">Puesto</label><input type="text"
                                                     class="form-control" id="editPuesto"></div>
@@ -696,7 +798,13 @@
                                             <div class="col-4"><label class="etiqueta">Empresa</label><select
                                                     id="editEmpresa" class="form-select">
                                                     <option>AYTO</option>
-                                                    <option>DIF</option>
+                                                    <option>DIF MUNICIPAL</option>
+                                                    <option>RASTRO</option>
+                                                    <option>IMPLAN</option>
+                                                    <option>CMCOP</option>
+                                                    <option>PENSIONES</option>
+                                                    <option>SEG PUB</option>
+                                                    <option>TEMPORAL</option>
                                                 </select></div>
                                             <div class="col-4"><label class="etiqueta">Archivo</label><input type="text"
                                                     class="form-control" id="editArchivo"></div>
@@ -706,7 +814,7 @@
                                             <div class="col-4"><label class="etiqueta">Seguro</label><select
                                                     id="editSeguro" class="form-select">
                                                     <option>ISSSTESON</option>
-                                                    <option>IMSS</option>
+                                                    <option>REDBENEFIT</option>
                                                 </select></div>
                                             <div class="col-4"><label class="etiqueta">Póliza</label><input type="text"
                                                     class="form-control" id="editPoliza"></div>

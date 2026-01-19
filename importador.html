@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Importador Masivo - RH Navojoa v2.4</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .header-tool {
+            background: #343a40;
+            color: white;
+            padding: 20px;
+            border-bottom: 5px solid #C5911E;
+        }
+
+        .step-box {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+        }
+
+        .console-log {
+            background: #000;
+            color: #00ff00;
+            font-family: monospace;
+            height: 300px;
+            overflow-y: auto;
+            padding: 15px;
+            border-radius: 5px;
+            font-size: 0.85rem;
+        }
+
+        .progress {
+            height: 25px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header-tool d-flex justify-content-between align-items-center">
+        <div>
+            <h3 class="m-0 fw-bold"><i class="bi bi-database-fill-up"></i> IMPORTADOR v2.4 (CORREGIDO)</h3>
+            <small>Carga inteligente con saldos por defecto para empleados nuevos.</small>
+        </div>
+        <a href="index.html" class="btn btn-outline-light btn-sm">Volver al Sistema</a>
+    </div>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-5">
+                <div class="step-box">
+                    <h5 class="fw-bold text-dark border-bottom pb-2">1. Seleccionar Archivo Excel</h5>
+                    <div class="alert alert-info small">
+                        <strong>Modo Fusión + Saldos:</strong> Empleados nuevos reciben saldos por defecto. Empleados
+                        existentes solo actualizan datos del Excel.
+                    </div>
+                    <p class="text-muted small">
+                        Columnas soportadas:<br>
+                        <b>ID, NOMBRE, FECHA ALTA, DEPTO, PUESTO, TIPO, EMPRESA, CURP, ESTATUS, DIRECCION, TELEFONO,
+                            SEGURO, POLIZA, BANCO, CUENTA, CLABE, ARCHIVO.</b>
+                    </p>
+                    <input type="file" id="inputExcel" class="form-control mb-3" accept=".xlsx, .xls, .csv">
+                    <div class="d-grid">
+                        <button class="btn btn-primary" onclick="procesarExcel()" id="btnProcesar" disabled>
+                            <i class="bi bi-gear-fill"></i> Analizar Archivo
+                        </button>
+                    </div>
+                </div>
+                <div class="step-box" id="panelCarga" style="display:none;">
+                    <h5 class="fw-bold text-dark border-bottom pb-2">3. Ejecutar Actualización</h5>
+                    <div class="alert alert-warning small">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        <strong id="lblTotalRow">0</strong> registros.
+                        <strong id="lblNuevos" class="text-success">0 nuevos</strong> |
+                        <strong id="lblExistentes" class="text-primary">0 actualizaciones</strong>
+                    </div>
+                    <div class="progress mb-3">
+                        <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-success"
+                            role="progressbar" style="width: 0%">0%</div>
+                    </div>
+                    <div class="d-grid">
+                        <button class="btn btn-danger fw-bold" onclick="iniciarCargaFirebase()">
+                            <i class="bi bi-cloud-upload-fill"></i> INICIAR FUSIÓN DE DATOS
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-7">
+                <div class="step-box">
+                    <h5 class="fw-bold text-dark border-bottom pb-2">2. Previsualización y Logs</h5>
+                    <div class="table-responsive mb-3" style="max-height: 200px; border:1px solid #ddd;">
+                        <table class="table table-sm table-striped table-bordered mb-0" style="font-size: 0.8rem;">
+                            <thead class="table-dark" id="previewHead"></thead>
+                            <tbody id="previewBody"></tbody>
+                        </table>
+                    </div>
+                    <label class="fw-bold small text-secondary">Registro de Operaciones:</label>
+                    <div id="consoleLog" class="console-log">Esperando archivo...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyD0rc64cfBhBsNtJCMyDCNbc5qXv5wNlVU",
+            authDomain: "nuevo-proyecto-92479.firebaseapp.com",
+            projectId: "nuevo-proyecto-92479",
+            storageBucket: "media-nuevo-proyecto-92479-2ecf",
+            messagingSenderId: "798385147161",
+            appId: "1:798385147161:web:bb909d1e4c95708c2b8988"
+        };
+
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        let datosExcel = [];
+        let idsExistentes = new Set();
+
+        const log = (msg, type = 'info') => {
+            const c = document.getElementById('consoleLog');
+            const color = type === 'error' ? 'red' : (type === 'success' ? 'cyan' : '#00ff00');
+            c.innerHTML += `<div style="color:${color}">[${new Date().toLocaleTimeString()}] ${msg}</div>`;
+            c.scrollTop = c.scrollHeight;
+        };
+
+        document.getElementById('inputExcel').addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                document.getElementById('btnProcesar').disabled = false;
+                log("Archivo seleccionado.");
+            }
+        });
+
+        async function procesarExcel() {
+            const file = document.getElementById('inputExcel').files[0];
+            const reader = new FileReader();
+
+            reader.onload = async (e) => {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const rawData = XLSX.utils.sheet_to_json(firstSheet, { defval: "" });
+
+                    if (rawData.length === 0) throw new Error("Archivo vacío.");
+
+                    datosExcel = rawData.map(row => limpiarFila(row)).filter(d => d.id);
+                    if (datosExcel.length === 0) throw new Error("No hay IDs válidos.");
+
+                    // NUEVO: Verificar cuáles ya existen
+                    log("Verificando empleados existentes...");
+                    idsExistentes.clear();
+                    const ids = datosExcel.map(d => d.id);
+                    const chunks = [];
+                    for (let i = 0; i < ids.length; i += 10) {
+                        chunks.push(ids.slice(i, i + 10));
+                    }
+                    for (const chunk of chunks) {
+                        const snap = await db.collection("empleados").where(firebase.firestore.FieldPath.documentId(), 'in', chunk).get();
+                        snap.forEach(doc => idsExistentes.add(doc.id));
+                    }
+
+                    const nuevos = datosExcel.filter(d => !idsExistentes.has(d.id)).length;
+                    const existentes = datosExcel.length - nuevos;
+
+                    mostrarPreview(datosExcel.slice(0, 5));
+                    document.getElementById('lblTotalRow').innerText = datosExcel.length;
+                    document.getElementById('lblNuevos').innerText = nuevos + " nuevos";
+                    document.getElementById('lblExistentes').innerText = existentes + " actualizaciones";
+                    document.getElementById('panelCarga').style.display = 'block';
+                    log(`Análisis: ${datosExcel.length} registros (${nuevos} nuevos, ${existentes} existentes).`, "success");
+
+                } catch (err) {
+                    log("Error: " + err.message, "error");
+                    Swal.fire("Error", err.message, "error");
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function limpiarFila(row) {
+            const keys = Object.keys(row);
+            const getVal = (keyPart) => {
+                const foundKey = keys.find(k => k.toUpperCase().includes(keyPart));
+                return foundKey ? String(row[foundKey]).trim().toUpperCase() : null;
+            };
+
+            const id = getVal("ID") || getVal("NUM") || getVal("EMPLEADO");
+            if (!id) return {};
+
+            let fechaAlta = getVal("FECHA") || getVal("ALTA");
+            if (fechaAlta && !isNaN(fechaAlta) && fechaAlta.length < 6) {
+                const dateObj = new Date(Math.round((parseFloat(fechaAlta) - 25569) * 86400 * 1000));
+                fechaAlta = dateObj.toISOString().split('T')[0];
+            }
+
+            let empleado = { id: id };
+            const addIfExist = (key, val) => { if (val !== null && val !== "") empleado[key] = val; };
+
+            addIfExist("nombre", getVal("NOMBRE"));
+            addIfExist("fechaAlta", fechaAlta);
+            addIfExist("depto", getVal("DEPTO") || getVal("DEPARTAMENTO"));
+            addIfExist("puesto", getVal("PUESTO"));
+            addIfExist("tipo", getVal("TIPO"));
+            addIfExist("empresa", getVal("EMPRESA") || getVal("NOMINA"));
+            addIfExist("curp", getVal("CURP"));
+            addIfExist("estatus", getVal("ESTATUS") || getVal("SITUACION"));
+            addIfExist("direccion", getVal("DIRECCION") || getVal("DOMICILIO"));
+            addIfExist("tel", getVal("TELEFONO") || getVal("CELULAR") || getVal("TEL"));
+            addIfExist("seguro", getVal("SEGURO") || getVal("INSTITUCION"));
+            addIfExist("poliza", getVal("POLIZA") || getVal("AFILIACION"));
+            addIfExist("banco", getVal("BANCO"));
+            addIfExist("cuenta", getVal("CUENTA") || getVal("TARJETA"));
+            addIfExist("clabe", getVal("CLABE") || getVal("INTERBANCARIA"));
+            addIfExist("numArchivo", getVal("ARCHIVO") || getVal("EXPEDIENTE"));
+
+            return empleado;
+        }
+
+        function mostrarPreview(muestras) {
+            const thead = document.getElementById('previewHead');
+            const tbody = document.getElementById('previewBody');
+            thead.innerHTML = ""; tbody.innerHTML = "";
+            if (muestras.length > 0) {
+                let trH = "<tr>";
+                Object.keys(muestras[0]).forEach(k => trH += `<th>${k}</th>`);
+                trH += "</tr>";
+                thead.innerHTML = trH;
+                muestras.forEach(row => {
+                    let tr = "<tr>";
+                    Object.values(row).forEach(v => tr += `<td>${v}</td>`);
+                    tr += "</tr>";
+                    tbody.innerHTML += tr;
+                });
+            }
+        }
+
+        async function iniciarCargaFirebase() {
+            if (!confirm(`Se procesarán ${datosExcel.length} registros. ¿Continuar?`)) return;
+
+            const batchSize = 250;
+            let batches = [];
+            let batch = db.batch();
+            let counter = 0;
+
+            log("Iniciando fusión...", "success");
+
+            datosExcel.forEach((empleado, index) => {
+                const docRef = db.collection("empleados").doc(empleado.id);
+                const esNuevo = !idsExistentes.has(empleado.id);
+
+                // CORRECCIÓN PRINCIPAL: Agregar saldos por defecto para empleados NUEVOS
+                if (esNuevo) {
+                    empleado.saldoVac = 0;
+                    empleado.saldoEcon = 2;
+                    empleado.saldoPSG = 0;
+                    empleado.saldoIncap = 0;
+                    empleado.acumuladoFaltas = 0;
+                    empleado.acumuladoRetardos = 0;
+                    empleado.acumuladoLuto = 0;
+                    empleado.acumuladoComisiones = 0;
+                    if (!empleado.estatus) empleado.estatus = "ACTIVO";
+                    log(`[NUEVO] ${empleado.id} - ${empleado.nombre || 'Sin nombre'}`);
+                } else {
+                    log(`[UPDATE] ${empleado.id}`);
+                }
+
+                batch.set(docRef, empleado, { merge: true });
+                counter++;
+
+                if (counter === batchSize || index === datosExcel.length - 1) {
+                    batches.push(batch);
+                    batch = db.batch();
+                    counter = 0;
+                }
+            });
+
+            const totalBatches = batches.length;
+            const progressBar = document.getElementById('progressBar');
+
+            try {
+                for (let i = 0; i < totalBatches; i++) {
+                    log(`Procesando lote ${i + 1}/${totalBatches}...`);
+                    await batches[i].commit();
+                    const porc = Math.round(((i + 1) / totalBatches) * 100);
+                    progressBar.style.width = porc + "%";
+                    progressBar.innerText = porc + "%";
+                }
+                log("✅ ACTUALIZACIÓN COMPLETADA.", "success");
+                Swal.fire("Éxito", "Base de datos actualizada correctamente.", "success");
+            } catch (error) {
+                console.error(error);
+                log("❌ ERROR: " + error.message, "error");
+                Swal.fire("Error", error.message, "error");
+            }
+        }
+    </script>
+
+</body>
+
+</html>

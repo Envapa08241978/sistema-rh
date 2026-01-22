@@ -541,7 +541,8 @@ function generarReporte() {
             let pasa = d.fechaInicio >= fIni && d.fechaInicio <= fFin;
             if (empFilter && !d.nombreEmpleado.includes(empFilter) && !d.empleadoId.includes(empFilter)) pasa = false;
             if (tipoSel !== 'TODOS') {
-                if (tipoSel === 'PERMISOS') { if (['VACACIONES', 'INCAPACIDAD', 'ALTA', 'HORAS_EXTRA', 'BAJA'].includes(d.tipo)) pasa = false; }
+                if (tipoSel === 'PERMISOS') { if (['VACACIONES', 'INCAPACIDAD', 'ALTA', 'HORAS_EXTRA', 'BAJA', 'PRIMA_VACACIONAL', 'PAGO_PRIMA_1SEM', 'PAGO_PRIMA_2SEM'].includes(d.tipo)) pasa = false; }
+                else if (tipoSel === 'PAGO_PRIMA') { if (!d.tipo.startsWith('PAGO_PRIMA_')) pasa = false; }
                 else { if (d.tipo !== tipoSel) pasa = false; }
             }
             if (pasa) {

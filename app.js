@@ -183,6 +183,9 @@ function renderizarEmpleado() {
     safeText('lblAcumComisiones', e.acumuladoComisiones || 0);
     safeText('lblAcumFaltas', e.acumuladoFaltas || 0);
     safeText('lblAcumRetardos', e.acumuladoRetardos || 0);
+    // Mostrar fechas de pago de Prima Vacacional
+    safeText('lblPrima1erSem', e.prima1erSem || "-");
+    safeText('lblPrima2doSem', e.prima2doSem || "-");
 
     safeVal('editID', e.id); safeVal('editNombre', e.nombre); safeVal('editFechaAlta', e.fechaAlta);
     safeVal('editDepto', e.depto); safeVal('editPuesto', e.puesto); safeVal('editEmpresa', e.empresa);
@@ -411,7 +414,40 @@ async function guardarPrimaVacacional() {
     } catch (e) { mostrarLoader(false); Swal.fire("Error", e.message, "error"); }
 }
 
-// === FUNCIÓN GENÉRICA PARA GUARDAR MOVIMIENTOS ===
+// === REGISTRAR PAGO DE PRIMA (DESDE NÓMINA) ===
+async function registrarPagoPrima() {
+    if (!validarSesion()) return;
+    const semestre = document.getElementById('cmbSemestrePrimaPago').value;
+    const fechaPago = document.getElementById('txtFechaPagoPrima').value;
+    if (!fechaPago) { Swal.fire("Error", "Selecciona la fecha de pago", "warning"); return; }
+
+    const campo = semestre === "1" ? "prima1erSem" : "prima2doSem";
+    const nombreSem = semestre === "1" ? "1er Semestre" : "2do Semestre";
+
+    mostrarLoader(true, "Registrando pago...");
+    try {
+        // Guardar en el documento del empleado
+        await db.collection("empleados").doc(empleadoActual.docId).update({
+            [campo]: fechaPago
+        });
+        // También registrar como movimiento para historial
+        await db.collection("movimientos").add({
+            empleadoId: empleadoActual.id,
+            nombreEmpleado: empleadoActual.nombre,
+            tipo: "PAGO_PRIMA_" + semestre + "SEM",
+            dias: 0,
+            oficio: "PAGO PRIMA " + nombreSem,
+            fechaInicio: fechaPago,
+            fechaFin: fechaPago,
+            motivo: "Pago de Prima Vacacional - " + nombreSem,
+            urlEvidencia: "",
+            fechaRegistro: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        mostrarLoader(false);
+        Swal.fire("Éxito", `Pago de Prima ${nombreSem} registrado`, "success");
+        document.getElementById('txtFechaPagoPrima').value = "";
+    } catch (e) { mostrarLoader(false); Swal.fire("Error", e.message, "error"); }
+}
 async function guardarMovGenerico(tipo, sufijo, dias, actualizacion = {}) {
     const oficio = document.getElementById('txtNumOficio' + sufijo).value;
     const file = fileCache[sufijo];

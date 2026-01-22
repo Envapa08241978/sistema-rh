@@ -410,6 +410,23 @@
                                         JUSTIF.</span><span class="saldo-numero text-dark" id="lblAcumRetardos">0</span>
                                 </div>
                             </div>
+                            <!-- PRIMA VACACIONAL PAGADA -->
+                            <div class="col-6 mt-1">
+                                <div class="saldo-box"
+                                    style="background-color: #d4edda; border-left: 3px solid #198754;">
+                                    <span class="saldo-titulo text-success">PRIMA 1er SEM</span>
+                                    <span class="saldo-numero text-success" id="lblPrima1erSem"
+                                        style="font-size: 0.85rem;">-</span>
+                                </div>
+                            </div>
+                            <div class="col-6 mt-1">
+                                <div class="saldo-box"
+                                    style="background-color: #d4edda; border-left: 3px solid #198754;">
+                                    <span class="saldo-titulo text-success">PRIMA 2do SEM</span>
+                                    <span class="saldo-numero text-success" id="lblPrima2doSem"
+                                        style="font-size: 0.85rem;">-</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -536,15 +553,41 @@
                                 <!-- Segunda fila: Prima Vacacional -->
                                 <div class="row g-3 mt-2">
                                     <div class="col-md-4">
-                                        <div class="card h-100 border shadow-sm p-3" style="border-left: 4px solid #198754 !important;">
-                                            <div class="fw-bold mb-2 text-success"><i class="bi bi-cash-coin me-1"></i>PRIMA VACACIONAL</div>
+                                        <div class="card h-100 border shadow-sm p-3"
+                                            style="border-left: 4px solid #198754 !important;">
+                                            <div class="fw-bold mb-2 text-success"><i
+                                                    class="bi bi-cash-coin me-1"></i>PRIMA VACACIONAL</div>
                                             <p class="text-muted small mb-2">Solicitud de pago de prima vacacional</p>
                                             <label class="etiqueta">Fecha de Solicitud</label>
-                                            <input type="date" class="form-control form-control-sm mb-2" id="txtFechaPrima">
+                                            <input type="date" class="form-control form-control-sm mb-2"
+                                                id="txtFechaPrima">
                                             <label class="etiqueta">Observaciones (opcional)</label>
-                                            <input type="text" class="form-control form-control-sm mb-2" id="txtObservacionesPrima" placeholder="Observaciones...">
-                                            <button class="btn btn-success btn-sm w-100 mt-3" onclick="guardarPrimaVacacional()">
+                                            <input type="text" class="form-control form-control-sm mb-2"
+                                                id="txtObservacionesPrima" placeholder="Observaciones...">
+                                            <button class="btn btn-success btn-sm w-100 mt-3"
+                                                onclick="guardarPrimaVacacional()">
                                                 <i class="bi bi-check-circle me-1"></i>SOLICITAR PRIMA
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <!-- Captura de Pago de Prima (Nómina) -->
+                                    <div class="col-md-4">
+                                        <div class="card h-100 border shadow-sm p-3"
+                                            style="border-left: 4px solid #0d6efd !important;">
+                                            <div class="fw-bold mb-2 text-primary"><i
+                                                    class="bi bi-wallet2 me-1"></i>REGISTRAR PAGO PRIMA</div>
+                                            <p class="text-muted small mb-2">Captura después del pago por Nómina</p>
+                                            <label class="etiqueta">Semestre</label>
+                                            <select class="form-select form-select-sm mb-2" id="cmbSemestrePrimaPago">
+                                                <option value="1">1er Semestre</option>
+                                                <option value="2">2do Semestre</option>
+                                            </select>
+                                            <label class="etiqueta">Fecha de Pago</label>
+                                            <input type="date" class="form-control form-control-sm mb-2"
+                                                id="txtFechaPagoPrima">
+                                            <button class="btn btn-primary btn-sm w-100 mt-3"
+                                                onclick="registrarPagoPrima()">
+                                                <i class="bi bi-cash-stack me-1"></i>REGISTRAR PAGO
                                             </button>
                                         </div>
                                     </div>

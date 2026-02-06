@@ -1,5 +1,5 @@
-// === SISTEMA RH NAVOJOA v87.0 (CORREGIDO) ===
-// CORRECCIONES: Eliminadas funciones duplicadas, lógica Artículo 100 activa
+// === SISTEMA RH NAVOJOA v88.0 ===
+// NUEVO: Módulo Correspondencia de Nómina protegido por usuario/contraseña
 
 let db, storage, empleadoActual = null, fileCache = {}, debounceTimer;
 let unsubscribeEmpleado = null, unsubscribeMovimientos = null;
@@ -49,6 +49,8 @@ function resetForm(sufijo) {
         else if (sufijo === 'Permiso') texto = "Adjuntar Justif.";
         else if (sufijo === 'Edit') texto = "Subir Nuevo Archivo";
         else if (sufijo === 'Extra') texto = "Escanear";
+        else if (sufijo === 'Varios') texto = "Adjuntar Archivo";
+        else if (sufijo === 'Corr') texto = "Adjuntar Archivo";
         if (span) span.innerText = texto;
     }
     delete fileCache[sufijo];
@@ -414,6 +416,37 @@ async function guardarPrimaVacacional() {
     } catch (e) { mostrarLoader(false); Swal.fire("Error", e.message, "error"); }
 }
 
+// === GUARDAR INCIDENCIAS VARIOS ===
+async function guardarIncidenciasVarios() {
+    if (!validarSesion()) return;
+    const asunto = document.getElementById('txtAsuntoVarios').value.trim();
+    const file = fileCache['Varios'];
+    if (!asunto) { Swal.fire("Error", "Escriba el asunto", "warning"); return; }
+    if (!file) { Swal.fire("Error", "Adjunte un archivo", "warning"); return; }
+
+    mostrarLoader(true, "Subiendo...");
+    try {
+        const url = await subirArchivoStorage(file, `evidencias/${empleadoActual.id}/${Date.now()}_VARIOS_${file.name}`);
+        const fechaHoy = new Date().toISOString().split('T')[0];
+        await db.collection("movimientos").add({
+            empleadoId: empleadoActual.id,
+            nombreEmpleado: empleadoActual.nombre,
+            tipo: "INCIDENCIAS_VARIOS",
+            dias: 0,
+            oficio: asunto,
+            fechaInicio: fechaHoy,
+            fechaFin: fechaHoy,
+            motivo: asunto,
+            urlEvidencia: url,
+            fechaRegistro: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        mostrarLoader(false);
+        Swal.fire("Éxito", "Incidencia registrada correctamente", "success");
+        document.getElementById('txtAsuntoVarios').value = "";
+        resetForm('Varios');
+    } catch (e) { mostrarLoader(false); Swal.fire("Error", e.message, "error"); }
+}
+
 // === REGISTRAR PAGO DE PRIMA (DESDE NÓMINA) ===
 async function registrarPagoPrima() {
     if (!validarSesion()) return;
@@ -541,7 +574,7 @@ function generarReporte() {
             let pasa = d.fechaInicio >= fIni && d.fechaInicio <= fFin;
             if (empFilter && !d.nombreEmpleado.includes(empFilter) && !d.empleadoId.includes(empFilter)) pasa = false;
             if (tipoSel !== 'TODOS') {
-                if (tipoSel === 'PERMISOS') { if (['VACACIONES', 'INCAPACIDAD', 'ALTA', 'HORAS_EXTRA', 'BAJA', 'PRIMA_VACACIONAL', 'PAGO_PRIMA_1SEM', 'PAGO_PRIMA_2SEM'].includes(d.tipo)) pasa = false; }
+                if (tipoSel === 'PERMISOS') { if (['VACACIONES', 'INCAPACIDAD', 'ALTA', 'HORAS_EXTRA', 'BAJA', 'PRIMA_VACACIONAL', 'PAGO_PRIMA_1SEM', 'PAGO_PRIMA_2SEM', 'INCIDENCIAS_VARIOS'].includes(d.tipo)) pasa = false; }
                 else if (tipoSel === 'PAGO_PRIMA') { if (!d.tipo.startsWith('PAGO_PRIMA_')) pasa = false; }
                 else { if (d.tipo !== tipoSel) pasa = false; }
             }
@@ -582,6 +615,138 @@ async function actualizarEstatus() {
         Swal.fire("Estatus Actualizado", `Empleado: ${nuevoEstatus}`, "success");
         resetForm('Baja');
     } catch (e) { mostrarLoader(false); Swal.fire("Error", e.message, "error"); }
+}
+
+// === CORRESPONDENCIA DE NÓMINA ===
+let usuarioCorrespondencia = null;
+let datosCorrespondenciaActual = [];
+
+function abrirCorrespondencia() {
+    const modal = new bootstrap.Modal(document.getElementById('modalCorrespondencia'));
+    // Si ya hay sesión activa, mostrar panel principal
+    if (usuarioCorrespondencia) {
+        document.getElementById('panelLoginCorr').style.display = 'none';
+        document.getElementById('panelCorrespondencia').style.display = 'block';
+        document.getElementById('lblUsuarioCorr').innerText = usuarioCorrespondencia;
+    } else {
+        document.getElementById('panelLoginCorr').style.display = 'block';
+        document.getElementById('panelCorrespondencia').style.display = 'none';
+        document.getElementById('corrUsuario').value = '';
+        document.getElementById('corrPassword').value = '';
+    }
+    modal.show();
+}
+
+async function loginCorrespondencia() {
+    const usuario = document.getElementById('corrUsuario').value.trim().toUpperCase();
+    const password = document.getElementById('corrPassword').value;
+    if (!usuario || !password) { Swal.fire("Error", "Ingrese usuario y contraseña", "warning"); return; }
+
+    mostrarLoader(true, "Verificando...");
+    try {
+        const snap = await db.collection("usuarios_nomina").doc(usuario).get();
+        if (!snap.exists) {
+            mostrarLoader(false);
+            Swal.fire("Error", "Usuario no encontrado", "error");
+            return;
+        }
+        const datos = snap.data();
+        if (datos.contrasena !== password) {
+            mostrarLoader(false);
+            Swal.fire("Error", "Contraseña incorrecta", "error");
+            return;
+        }
+        // Login exitoso
+        usuarioCorrespondencia = usuario;
+        document.getElementById('panelLoginCorr').style.display = 'none';
+        document.getElementById('panelCorrespondencia').style.display = 'block';
+        document.getElementById('lblUsuarioCorr').innerText = usuario;
+        mostrarLoader(false);
+        Swal.fire({ icon: 'success', title: 'Bienvenido', text: datos.nombre || usuario, timer: 1500, showConfirmButton: false });
+    } catch (e) { mostrarLoader(false); Swal.fire("Error", e.message, "error"); }
+}
+
+function logoutCorrespondencia() {
+    usuarioCorrespondencia = null;
+    document.getElementById('panelLoginCorr').style.display = 'block';
+    document.getElementById('panelCorrespondencia').style.display = 'none';
+    document.getElementById('tablaCorrespondenciaBody').innerHTML = '';
+    document.getElementById('corrContador').innerText = 'Resultados: 0';
+    datosCorrespondenciaActual = [];
+    resetForm('Corr');
+}
+
+async function guardarCorrespondencia() {
+    if (!usuarioCorrespondencia) { Swal.fire("Error", "Sesión expirada", "error"); return; }
+    const asunto = document.getElementById('txtAsuntoCorr').value.trim();
+    const file = fileCache['Corr'];
+    if (!asunto) { Swal.fire("Error", "Escriba el asunto", "warning"); return; }
+    if (!file) { Swal.fire("Error", "Adjunte un archivo", "warning"); return; }
+
+    mostrarLoader(true, "Guardando...");
+    try {
+        const url = await subirArchivoStorage(file, `correspondencia/${Date.now()}_${file.name}`);
+        const fechaHoy = new Date().toISOString().split('T')[0];
+        await db.collection("correspondencia_nomina").add({
+            asunto: asunto,
+            urlArchivo: url,
+            fechaRegistro: fechaHoy,
+            registradoPor: usuarioCorrespondencia,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        mostrarLoader(false);
+        Swal.fire("Éxito", "Correspondencia registrada", "success");
+        document.getElementById('txtAsuntoCorr').value = '';
+        resetForm('Corr');
+        buscarCorrespondencia(); // Actualizar tabla
+    } catch (e) { mostrarLoader(false); Swal.fire("Error", e.message, "error"); }
+}
+
+async function buscarCorrespondencia() {
+    if (!usuarioCorrespondencia) return;
+    const fIni = document.getElementById('corrFechaIni').value;
+    const fFin = document.getElementById('corrFechaFin').value;
+    const buscarTexto = document.getElementById('corrBuscarAsunto').value.trim().toUpperCase();
+
+    mostrarLoader(true, "Buscando...");
+    try {
+        const snapshot = await db.collection("correspondencia_nomina").orderBy("fechaRegistro", "desc").limit(200).get();
+        const tbody = document.getElementById('tablaCorrespondenciaBody');
+        tbody.innerHTML = '';
+        datosCorrespondenciaActual = [];
+
+        snapshot.forEach(doc => {
+            const d = doc.data();
+            let pasa = true;
+            // Filtro por fechas
+            if (fIni && d.fechaRegistro < fIni) pasa = false;
+            if (fFin && d.fechaRegistro > fFin) pasa = false;
+            // Filtro por texto
+            if (buscarTexto && !d.asunto.toUpperCase().includes(buscarTexto)) pasa = false;
+
+            if (pasa) {
+                const link = d.urlArchivo ? `<button class="btn btn-sm btn-link" onclick="window.open('${d.urlArchivo}', '_blank')"><i class="bi bi-eye"></i></button>` : '-';
+                tbody.innerHTML += `<tr><td>${d.fechaRegistro}</td><td>${d.asunto}</td><td>${d.registradoPor}</td><td>${link}</td></tr>`;
+                datosCorrespondenciaActual.push(d);
+            }
+        });
+        document.getElementById('corrContador').innerText = `Resultados: ${datosCorrespondenciaActual.length}`;
+        mostrarLoader(false);
+    } catch (e) { mostrarLoader(false); Swal.fire("Error", e.message, "error"); }
+}
+
+function exportarCorrespondenciaExcel() {
+    if (!datosCorrespondenciaActual.length) { Swal.fire("Sin datos", "Busque primero", "warning"); return; }
+    const datosExcel = datosCorrespondenciaActual.map(d => ({
+        "Fecha": d.fechaRegistro,
+        "Asunto": d.asunto,
+        "Registrado Por": d.registradoPor,
+        "Archivo": d.urlArchivo || ""
+    }));
+    const ws = XLSX.utils.json_to_sheet(datosExcel);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Correspondencia");
+    XLSX.writeFile(wb, "Correspondencia_Nomina.xlsx");
 }
 
 document.getElementById('fechaSistema').innerText = new Date().toLocaleDateString();

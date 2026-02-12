@@ -562,32 +562,69 @@ function generarReporte() {
     const fIni = document.getElementById('repFechaIni').value;
     const fFin = document.getElementById('repFechaFin').value;
     if (!fIni || !fFin) { Swal.fire("Fechas requeridas", "", "warning"); return; }
-    mostrarLoader(true);
-    db.collection("movimientos").limit(200).get().then(qs => {
-        const tbody = document.getElementById('tablaReportesBody');
-        tbody.innerHTML = "";
-        let dataExport = [];
-        const empFilter = document.getElementById('repEmpleado').value.toUpperCase();
-        const tipoSel = document.getElementById('repTipo').value;
-        qs.forEach(doc => {
-            const d = doc.data();
-            let pasa = d.fechaInicio >= fIni && d.fechaInicio <= fFin;
-            if (empFilter && !d.nombreEmpleado.includes(empFilter) && !d.empleadoId.includes(empFilter)) pasa = false;
-            if (tipoSel !== 'TODOS') {
-                if (tipoSel === 'PERMISOS') { if (['VACACIONES', 'INCAPACIDAD', 'ALTA', 'HORAS_EXTRA', 'BAJA', 'PRIMA_VACACIONAL', 'PAGO_PRIMA_1SEM', 'PAGO_PRIMA_2SEM', 'INCIDENCIAS_VARIOS'].includes(d.tipo)) pasa = false; }
-                else if (tipoSel === 'PAGO_PRIMA') { if (!d.tipo.startsWith('PAGO_PRIMA_')) pasa = false; }
-                else { if (d.tipo !== tipoSel) pasa = false; }
+    mostrarLoader(true, "Generando reporte...");
+    
+    // CORRECCIÓN: Filtrar por fecha DIRECTAMENTE en la base de datos
+    // para asegurar que traemos todos los registros del periodo
+    db.collection("movimientos")
+        .where("fechaInicio", ">=", fIni)
+        .where("fechaInicio", "<=", fFin)
+        .orderBy("fechaInicio", "asc") // Ordenar por fecha
+        .limit(2000) // Aumentamos límite para cubrir periodos largos
+        .get()
+        .then(qs => {
+            const tbody = document.getElementById('tablaReportesBody');
+            tbody.innerHTML = "";
+            let dataExport = [];
+            const empFilter = document.getElementById('repEmpleado').value.toUpperCase();
+            const tipoSel = document.getElementById('repTipo').value;
+
+            if (qs.empty) {
+                document.getElementById('repContador').innerText = "Resultados: 0";
+                mostrarLoader(false);
+                return;
             }
-            if (pasa) {
-                let link = d.urlEvidencia && d.urlEvidencia.startsWith('http') ? `<button class="btn btn-sm btn-link" onclick="window.open('${d.urlEvidencia}', '_blank')"><i class="bi bi-eye"></i></button>` : '-';
-                tbody.innerHTML += `<tr><td>${d.fechaInicio}</td><td>${d.fechaFin || '-'}</td><td>${d.nombreEmpleado}</td><td>${d.tipo}</td><td>${d.dias}</td><td>${d.oficio}</td><td>${d.motivo || d.folioMedico || ""}</td><td>${link}</td></tr>`;
-                dataExport.push(d);
+
+            qs.forEach(doc => {
+                const d = doc.data();
+                // El filtro de fecha ya se hizo en la DB
+                let pasa = true; 
+                
+                // Filtros secundarios en cliente (nombre/tipo)
+                if (empFilter && !d.nombreEmpleado.includes(empFilter) && !d.empleadoId.includes(empFilter)) pasa = false;
+                
+                if (tipoSel !== 'TODOS') {
+                    if (tipoSel === 'PERMISOS') { 
+                        if (['VACACIONES', 'INCAPACIDAD', 'ALTA', 'HORAS_EXTRA', 'BAJA', 'PRIMA_VACACIONAL', 'PAGO_PRIMA_1SEM', 'PAGO_PRIMA_2SEM', 'INCIDENCIAS_VARIOS'].includes(d.tipo)) pasa = false; 
+                    }
+                    else if (tipoSel === 'PAGO_PRIMA') { 
+                        if (!d.tipo.startsWith('PAGO_PRIMA_')) pasa = false; 
+                    }
+                    else { 
+                        if (d.tipo !== tipoSel) pasa = false; 
+                    }
+                }
+
+                if (pasa) {
+                    let link = d.urlEvidencia && d.urlEvidencia.startsWith('http') ? `<button class="btn btn-sm btn-link" onclick="window.open('${d.urlEvidencia}', '_blank')"><i class="bi bi-eye"></i></button>` : '-';
+                    tbody.innerHTML += `<tr><td>${d.fechaInicio}</td><td>${d.fechaFin || '-'}</td><td>${d.nombreEmpleado}</td><td>${d.tipo}</td><td>${d.dias}</td><td>${d.oficio}</td><td>${d.motivo || d.folioMedico || ""}</td><td>${link}</td></tr>`;
+                    dataExport.push(d);
+                }
+            });
+            window.datosReporteActual = dataExport;
+            document.getElementById('repContador').innerText = `Resultados: ${dataExport.length}`;
+            mostrarLoader(false);
+        })
+        .catch(error => {
+            console.error("Error en reporte:", error);
+            mostrarLoader(false);
+            // Si falta el índice, Firestore enviará un link en la consola, pero al usuario le mostramos mensaje
+            if (error.message.includes("index")) {
+                Swal.fire("Error de Índice", "El sistema está creando el índice de búsqueda. Intente de nuevo en unos minutos.", "info");
+            } else {
+                Swal.fire("Error", "No se pudo generar el reporte: " + error.message, "error");
             }
         });
-        window.datosReporteActual = dataExport;
-        document.getElementById('repContador').innerText = `Resultados: ${dataExport.length}`;
-        mostrarLoader(false);
-    });
 }
 
 function descargarExcel() {

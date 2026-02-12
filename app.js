@@ -563,16 +563,15 @@ function generarReporte() {
     const fFin = document.getElementById('repFechaFin').value;
     if (!fIni || !fFin) { Swal.fire("Fechas requeridas", "", "warning"); return; }
     mostrarLoader(true, "Generando reporte...");
-    
+
     // CORRECCIÓN: Filtrar por fecha DIRECTAMENTE en la base de datos
-    // para asegurar que traemos todos los registros del periodo
     db.collection("movimientos")
         .where("fechaInicio", ">=", fIni)
         .where("fechaInicio", "<=", fFin)
-        .orderBy("fechaInicio", "asc") // Ordenar por fecha
-        .limit(2000) // Aumentamos límite para cubrir periodos largos
+        .orderBy("fechaInicio", "asc")
+        .limit(2000)
         .get()
-        .then(qs => {
+        .then(async qs => {
             const tbody = document.getElementById('tablaReportesBody');
             tbody.innerHTML = "";
             let dataExport = [];
@@ -585,32 +584,85 @@ function generarReporte() {
                 return;
             }
 
+            // 1. Obtener lista de IDs de empleados únicos en el reporte
+            const empleadosIds = new Set();
+            const movimientosTemp = [];
+
             qs.forEach(doc => {
                 const d = doc.data();
-                // El filtro de fecha ya se hizo en la DB
-                let pasa = true; 
-                
-                // Filtros secundarios en cliente (nombre/tipo)
+                // Filtros secundarios en cliente
+                let pasa = true;
                 if (empFilter && !d.nombreEmpleado.includes(empFilter) && !d.empleadoId.includes(empFilter)) pasa = false;
-                
+
                 if (tipoSel !== 'TODOS') {
-                    if (tipoSel === 'PERMISOS') { 
-                        if (['VACACIONES', 'INCAPACIDAD', 'ALTA', 'HORAS_EXTRA', 'BAJA', 'PRIMA_VACACIONAL', 'PAGO_PRIMA_1SEM', 'PAGO_PRIMA_2SEM', 'INCIDENCIAS_VARIOS'].includes(d.tipo)) pasa = false; 
+                    if (tipoSel === 'PERMISOS') {
+                        if (['VACACIONES', 'INCAPACIDAD', 'ALTA', 'HORAS_EXTRA', 'BAJA', 'PRIMA_VACACIONAL', 'PAGO_PRIMA_1SEM', 'PAGO_PRIMA_2SEM', 'INCIDENCIAS_VARIOS'].includes(d.tipo)) pasa = false;
                     }
-                    else if (tipoSel === 'PAGO_PRIMA') { 
-                        if (!d.tipo.startsWith('PAGO_PRIMA_')) pasa = false; 
-                    }
-                    else { 
-                        if (d.tipo !== tipoSel) pasa = false; 
-                    }
+                    else if (tipoSel === 'PAGO_PRIMA') { if (!d.tipo.startsWith('PAGO_PRIMA_')) pasa = false; }
+                    else { if (d.tipo !== tipoSel) pasa = false; }
                 }
 
                 if (pasa) {
-                    let link = d.urlEvidencia && d.urlEvidencia.startsWith('http') ? `<button class="btn btn-sm btn-link" onclick="window.open('${d.urlEvidencia}', '_blank')"><i class="bi bi-eye"></i></button>` : '-';
-                    tbody.innerHTML += `<tr><td>${d.fechaInicio}</td><td>${d.fechaFin || '-'}</td><td>${d.nombreEmpleado}</td><td>${d.tipo}</td><td>${d.dias}</td><td>${d.oficio}</td><td>${d.motivo || d.folioMedico || ""}</td><td>${link}</td></tr>`;
-                    dataExport.push(d);
+                    movimientosTemp.push(d);
+                    if (d.empleadoId) empleadosIds.add(d.empleadoId);
                 }
             });
+
+            // 2. Obtener departamentos de esos empleados
+            // Nota: Hacemos fetch de todos los empleados necesarios.
+            // Si son pocos, podríamos hacer consultas individuales, pero mejor traemos info básica.
+            mostrarLoader(true, `Consultando departamentos (${empleadosIds.size})...`);
+
+            const mapaDeptos = {};
+            if (empleadosIds.size > 0) {
+                // Opción A: Consultar uno por uno (puede ser lento si son muchos)
+                // Opción B: Consultar todos los empleados y filtrar (mejor si la BD no es gigante)
+                // Vamos a intentar consultar solo los necesarios en lotes de 10 o todos si son pocos.
+
+                // Estrategia robusta: Consultar los documentos de los empleados
+                // Usamos Promise.all con un límite de concurrencia simple
+                const ids = Array.from(empleadosIds);
+                const chunks = [];
+                for (let i = 0; i < ids.length; i += 10) {
+                    chunks.push(ids.slice(i, i + 10));
+                }
+
+                // Firestore 'in' query supports up to 10
+                for (const chunk of chunks) {
+                    // Sin embargo, 'in' query es con where('id', 'in', chunk). 'id' es campo documento?
+                    // Mejor hacemos getAll con promises
+                    const promesas = chunk.map(id => db.collection("empleados").doc(id).get());
+                    const snapshots = await Promise.all(promesas);
+                    snapshots.forEach(snap => {
+                        if (snap.exists) {
+                            mapaDeptos[snap.id] = snap.data().depto || "SIN ASIGNAR";
+                        }
+                    });
+                }
+            }
+
+            // 3. Renderizar tabla y preparar export
+            movimientosTemp.forEach(d => {
+                const depto = mapaDeptos[d.empleadoId] || "---";
+                const link = d.urlEvidencia && d.urlEvidencia.startsWith('http') ? `<button class="btn btn-sm btn-link" onclick="window.open('${d.urlEvidencia}', '_blank')"><i class="bi bi-eye"></i></button>` : '-';
+
+                tbody.innerHTML += `<tr>
+                    <td>${d.fechaInicio}</td>
+                    <td>${d.fechaFin || '-'}</td>
+                    <td>${d.nombreEmpleado}</td>
+                    <td><small>${depto}</small></td>
+                    <td>${d.tipo}</td>
+                    <td>${d.dias}</td>
+                    <td>${d.oficio}</td>
+                    <td>${d.motivo || d.folioMedico || ""}</td>
+                    <td>${link}</td>
+                </tr>`;
+
+                // Agregar depto al objeto para exportación
+                d.departamento = depto;
+                dataExport.push(d);
+            });
+
             window.datosReporteActual = dataExport;
             document.getElementById('repContador').innerText = `Resultados: ${dataExport.length}`;
             mostrarLoader(false);
@@ -618,9 +670,8 @@ function generarReporte() {
         .catch(error => {
             console.error("Error en reporte:", error);
             mostrarLoader(false);
-            // Si falta el índice, Firestore enviará un link en la consola, pero al usuario le mostramos mensaje
             if (error.message.includes("index")) {
-                Swal.fire("Error de Índice", "El sistema está creando el índice de búsqueda. Intente de nuevo en unos minutos.", "info");
+                Swal.fire("Error de Índice", "El sistema está creando el índice. Intente de nuevo en unos minutos.", "info");
             } else {
                 Swal.fire("Error", "No se pudo generar el reporte: " + error.message, "error");
             }
@@ -629,7 +680,17 @@ function generarReporte() {
 
 function descargarExcel() {
     if (!window.datosReporteActual || !window.datosReporteActual.length) { Swal.fire("Sin datos", "Genera reporte primero", "warning"); return; }
-    const datosParaExcel = window.datosReporteActual.map(d => ({ "Fecha Inicio": d.fechaInicio, "Fecha Fin": d.fechaFin || "", "ID Empleado": d.empleadoId, "Nombre": d.nombreEmpleado, "Tipo": d.tipo, "Días": d.dias, "Oficio": d.oficio, "Detalle": d.motivo || d.folioMedico || "" }));
+    const datosParaExcel = window.datosReporteActual.map(d => ({
+        "Fecha Inicio": d.fechaInicio,
+        "Fecha Fin": d.fechaFin || "",
+        "ID Empleado": d.empleadoId,
+        "Nombre": d.nombreEmpleado,
+        "Departamento": d.departamento || "---",
+        "Tipo": d.tipo,
+        "Días": d.dias,
+        "Oficio": d.oficio,
+        "Detalle": d.motivo || d.folioMedico || ""
+    }));
     const ws = XLSX.utils.json_to_sheet(datosParaExcel);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Reporte");

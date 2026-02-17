@@ -181,10 +181,23 @@ function renderizarEmpleado() {
     safeText('lblSaldoEcon', e.saldoEcon || 0);
     safeText('lblSaldoPSG', (e.saldoPSG || 0) + " / 45");
     safeText('lblSaldoIncap', e.saldoIncap || 0);
-    safeText('lblAcumLuto', e.acumuladoLuto || 0);
-    safeText('lblAcumComisiones', e.acumuladoComisiones || 0);
-    safeText('lblAcumFaltas', e.acumuladoFaltas || 0);
-    safeText('lblAcumRetardos', e.acumuladoRetardos || 0);
+    // Calcular contadores desde movimientos del año actual
+    let comisionesAnual = 0, faltasAnual = 0, retardosAnual = 0, lutoAnual = 0;
+    if (e.movimientos) {
+        const anioActual = new Date().getFullYear().toString();
+        e.movimientos.forEach(m => {
+            if (m.fechaInicio && m.fechaInicio.startsWith(anioActual)) {
+                if (m.tipo === 'COMISION') comisionesAnual += parseFloat(m.dias || 0);
+                if (m.tipo === 'JUSTIFICANTE_FALTA') faltasAnual += parseFloat(m.dias || 0);
+                if (m.tipo === 'JUSTIFICANTE_RETARDO') retardosAnual += parseFloat(m.dias || 0);
+                if (m.tipo === 'PCG_LUTO') lutoAnual += parseFloat(m.dias || 0);
+            }
+        });
+    }
+    safeText('lblAcumLuto', lutoAnual);
+    safeText('lblAcumComisiones', comisionesAnual);
+    safeText('lblAcumFaltas', faltasAnual);
+    safeText('lblAcumRetardos', retardosAnual);
     // Mostrar fechas de pago de Prima Vacacional
     safeText('lblPrima1erSem', e.prima1erSem || "-");
     safeText('lblPrima2doSem', e.prima2doSem || "-");
@@ -359,6 +372,10 @@ async function guardarPermiso() {
     let upd = {};
     if (tipo === 'PCG_ECONOMICO') upd.saldoEcon = (empleadoActual.saldoEcon || 0) - dias;
     if (tipo === 'PSG') upd.saldoPSG = (empleadoActual.saldoPSG || 0) + dias;
+    if (tipo === 'COMISION') upd.acumuladoComisiones = (empleadoActual.acumuladoComisiones || 0) + dias;
+    if (tipo === 'JUSTIFICANTE_FALTA') upd.acumuladoFaltas = (empleadoActual.acumuladoFaltas || 0) + dias;
+    if (tipo === 'JUSTIFICANTE_RETARDO') upd.acumuladoRetardos = (empleadoActual.acumuladoRetardos || 0) + dias;
+    if (tipo === 'PCG_LUTO') upd.acumuladoLuto = (empleadoActual.acumuladoLuto || 0) + dias;
     await guardarMovGenerico(tipo, "Permiso", dias, upd);
 }
 

@@ -1084,6 +1084,48 @@
                                             <tbody id="tablaReportesBody"></tbody>
                                         </table>
                                     </div>
+                                    <!-- SECCIÓN ESTADÍSTICAS -->
+                                    <hr class="my-4">
+                                    <div class="d-grid gap-2">
+                                        <button class="btn btn-dark fw-bold" onclick="generarEstadisticas()">
+                                            📊 VER ESTADÍSTICAS DEL AÑO
+                                        </button>
+                                    </div>
+                                    <div id="seccionEstadisticas" style="display:none;" class="mt-4">
+                                        <h5 class="fw-bold text-center mb-3" style="color: var(--navojoa-tinto);">
+                                            📊 ESTADÍSTICAS DE INCIDENCIAS (<span id="anioEstadisticas"></span>)
+                                        </h5>
+                                        <div class="row g-3">
+                                            <div class="col-md-6">
+                                                <div class="card shadow-sm border-0 p-3">
+                                                    <h6 class="fw-bold text-danger"><i
+                                                            class="bi bi-x-circle me-1"></i>FALTAS JUSTIFICADAS</h6>
+                                                    <canvas id="chartFaltas" height="250"></canvas>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="card shadow-sm border-0 p-3">
+                                                    <h6 class="fw-bold text-warning"><i
+                                                            class="bi bi-clock me-1"></i>RETARDOS JUSTIFICADOS</h6>
+                                                    <canvas id="chartRetardos" height="250"></canvas>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="card shadow-sm border-0 p-3">
+                                                    <h6 class="fw-bold text-primary"><i
+                                                            class="bi bi-briefcase me-1"></i>COMISIONES OFICIALES</h6>
+                                                    <canvas id="chartComisiones" height="250"></canvas>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="card shadow-sm border-0 p-3">
+                                                    <h6 class="fw-bold" style="color: #d4a017;"><i
+                                                            class="bi bi-hospital me-1"></i>INCAPACIDADES</h6>
+                                                    <canvas id="chartIncapacidades" height="250"></canvas>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             <div class="tab-pane fade" id="baja">

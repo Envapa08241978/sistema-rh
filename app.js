@@ -864,5 +864,116 @@ function exportarCorrespondenciaExcel() {
     XLSX.writeFile(wb, "Correspondencia_Nomina.xlsx");
 }
 
+// === ESTADÍSTICAS DE INCIDENCIAS ===
+let chartInstances = {};
+async function generarEstadisticas() {
+    const anio = new Date().getFullYear();
+    const fIni = anio + "-01-01";
+    const fFin = anio + "-12-31";
+    document.getElementById('anioEstadisticas').innerText = anio;
+    mostrarLoader(true, "Consultando movimientos del año...");
+    try {
+        const qs = await db.collection("movimientos")
+            .where("fechaInicio", ">=", fIni)
+            .where("fechaInicio", "<=", fFin)
+            .orderBy("fechaInicio", "asc")
+            .limit(5000)
+            .get();
+
+        const tipos = {
+            'JUSTIFICANTE_FALTA': {},
+            'JUSTIFICANTE_RETARDO': {},
+            'COMISION': {},
+            'INCAPACIDAD': {}
+        };
+        // Agrupar por tipo > por empleado > sumar días
+        qs.forEach(doc => {
+            const d = doc.data();
+            const t = d.tipo;
+            // Incapacidades: agrupar todas las variantes
+            let key = t;
+            if (t === 'ENFERMEDAD GENERAL' || t === 'RIESGO TRABAJO' || t === 'MATERNIDAD' || t === 'INCAPACIDAD') {
+                key = 'INCAPACIDAD';
+            }
+            if (tipos[key] !== undefined) {
+                const nombre = d.nombreEmpleado || d.empleadoId || "Desconocido";
+                if (!tipos[key][nombre]) tipos[key][nombre] = 0;
+                tipos[key][nombre] += parseFloat(d.dias || 0);
+            }
+        });
+
+        // Función para preparar Top 10
+        function top10(obj) {
+            return Object.entries(obj)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 10);
+        }
+
+        const dataFaltas = top10(tipos['JUSTIFICANTE_FALTA']);
+        const dataRetardos = top10(tipos['JUSTIFICANTE_RETARDO']);
+        const dataComisiones = top10(tipos['COMISION']);
+        const dataIncap = top10(tipos['INCAPACIDAD']);
+
+        // Renderizar gráficas
+        function renderChart(canvasId, data, color, borderColor) {
+            if (chartInstances[canvasId]) chartInstances[canvasId].destroy();
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            const labels = data.map(d => d[0]);
+            const values = data.map(d => d[1]);
+            chartInstances[canvasId] = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Días',
+                        data: values,
+                        backgroundColor: color,
+                        borderColor: borderColor,
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => ctx.parsed.x + ' días'
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            ticks: { stepSize: 1 }
+                        },
+                        y: {
+                            ticks: { font: { size: 11 } }
+                        }
+                    }
+                }
+            });
+        }
+
+        renderChart('chartFaltas', dataFaltas, 'rgba(220, 53, 69, 0.7)', 'rgba(220, 53, 69, 1)');
+        renderChart('chartRetardos', dataRetardos, 'rgba(255, 193, 7, 0.7)', 'rgba(255, 193, 7, 1)');
+        renderChart('chartComisiones', dataComisiones, 'rgba(13, 110, 253, 0.7)', 'rgba(13, 110, 253, 1)');
+        renderChart('chartIncapacidades', dataIncap, 'rgba(212, 160, 23, 0.7)', 'rgba(212, 160, 23, 1)');
+
+        document.getElementById('seccionEstadisticas').style.display = 'block';
+        mostrarLoader(false);
+
+        if (qs.empty) {
+            Swal.fire("Sin datos", "No se encontraron movimientos en " + anio, "info");
+        }
+    } catch (e) {
+        mostrarLoader(false);
+        Swal.fire("Error", e.message, "error");
+    }
+}
+
 document.getElementById('fechaSistema').innerText = new Date().toLocaleDateString();
 window.onload = initApp;

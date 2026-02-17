@@ -1085,43 +1085,46 @@
                                         </table>
                                     </div>
                                     <!-- SECCIÓN ESTADÍSTICAS -->
-                                    <hr class="my-4">
-                                    <div class="d-grid gap-2">
-                                        <button class="btn btn-dark fw-bold" onclick="generarEstadisticas()">
-                                            📊 VER ESTADÍSTICAS DEL AÑO
-                                        </button>
+                                    <hr class="my-3">
+                                    <div class="row g-2 align-items-end">
+                                        <div class="col-4"><label class="etiqueta">Desde</label><input type="date"
+                                                class="form-control form-control-sm" id="estFechaIni"></div>
+                                        <div class="col-4"><label class="etiqueta">Hasta</label><input type="date"
+                                                class="form-control form-control-sm" id="estFechaFin"></div>
+                                        <div class="col-4"><button class="btn btn-dark btn-sm fw-bold w-100"
+                                                onclick="generarEstadisticas()">📊 ESTADÍSTICAS</button></div>
                                     </div>
-                                    <div id="seccionEstadisticas" style="display:none;" class="mt-4">
-                                        <h5 class="fw-bold text-center mb-3" style="color: var(--navojoa-tinto);">
-                                            📊 ESTADÍSTICAS DE INCIDENCIAS (<span id="anioEstadisticas"></span>)
-                                        </h5>
-                                        <div class="row g-3">
-                                            <div class="col-md-6">
-                                                <div class="card shadow-sm border-0 p-3">
-                                                    <h6 class="fw-bold text-danger"><i
-                                                            class="bi bi-x-circle me-1"></i>FALTAS JUSTIFICADAS</h6>
-                                                    <canvas id="chartFaltas" height="250"></canvas>
+                                    <div id="seccionEstadisticas" style="display:none;" class="mt-3">
+                                        <div class="row g-2">
+                                            <div class="col-6">
+                                                <div class="card shadow-sm border-0 p-2">
+                                                    <small class="fw-bold text-danger mb-1"><i
+                                                            class="bi bi-x-circle me-1"></i>FALTAS JUSTIF.</small>
+                                                    <div style="height:160px;"><canvas id="chartFaltas"></canvas></div>
                                                 </div>
                                             </div>
-                                            <div class="col-md-6">
-                                                <div class="card shadow-sm border-0 p-3">
-                                                    <h6 class="fw-bold text-warning"><i
-                                                            class="bi bi-clock me-1"></i>RETARDOS JUSTIFICADOS</h6>
-                                                    <canvas id="chartRetardos" height="250"></canvas>
+                                            <div class="col-6">
+                                                <div class="card shadow-sm border-0 p-2">
+                                                    <small class="fw-bold text-warning mb-1"><i
+                                                            class="bi bi-clock me-1"></i>RETARDOS JUSTIF.</small>
+                                                    <div style="height:160px;"><canvas id="chartRetardos"></canvas>
+                                                    </div>
                                                 </div>
                                             </div>
-                                            <div class="col-md-6">
-                                                <div class="card shadow-sm border-0 p-3">
-                                                    <h6 class="fw-bold text-primary"><i
-                                                            class="bi bi-briefcase me-1"></i>COMISIONES OFICIALES</h6>
-                                                    <canvas id="chartComisiones" height="250"></canvas>
+                                            <div class="col-6">
+                                                <div class="card shadow-sm border-0 p-2">
+                                                    <small class="fw-bold text-primary mb-1"><i
+                                                            class="bi bi-briefcase me-1"></i>COMISIONES</small>
+                                                    <div style="height:160px;"><canvas id="chartComisiones"></canvas>
+                                                    </div>
                                                 </div>
                                             </div>
-                                            <div class="col-md-6">
-                                                <div class="card shadow-sm border-0 p-3">
-                                                    <h6 class="fw-bold" style="color: #d4a017;"><i
-                                                            class="bi bi-hospital me-1"></i>INCAPACIDADES</h6>
-                                                    <canvas id="chartIncapacidades" height="250"></canvas>
+                                            <div class="col-6">
+                                                <div class="card shadow-sm border-0 p-2">
+                                                    <small class="fw-bold mb-1" style="color:#d4a017;"><i
+                                                            class="bi bi-hospital me-1"></i>INCAPACIDADES</small>
+                                                    <div style="height:160px;"><canvas id="chartIncapacidades"></canvas>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>

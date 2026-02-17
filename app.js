@@ -867,11 +867,13 @@ function exportarCorrespondenciaExcel() {
 // === ESTADÍSTICAS DE INCIDENCIAS ===
 let chartInstances = {};
 async function generarEstadisticas() {
-    const anio = new Date().getFullYear();
-    const fIni = anio + "-01-01";
-    const fFin = anio + "-12-31";
-    document.getElementById('anioEstadisticas').innerText = anio;
-    mostrarLoader(true, "Consultando movimientos del año...");
+    const fIni = document.getElementById('estFechaIni').value;
+    const fFin = document.getElementById('estFechaFin').value;
+    if (!fIni || !fFin) {
+        Swal.fire("Fechas requeridas", "Seleccione Desde y Hasta para consultar", "warning");
+        return;
+    }
+    mostrarLoader(true, "Consultando movimientos...");
     try {
         const qs = await db.collection("movimientos")
             .where("fechaInicio", ">=", fIni)
@@ -951,7 +953,7 @@ async function generarEstadisticas() {
                             ticks: { stepSize: 1 }
                         },
                         y: {
-                            ticks: { font: { size: 11 } }
+                            ticks: { font: { size: 9 } }
                         }
                     }
                 }
@@ -967,7 +969,7 @@ async function generarEstadisticas() {
         mostrarLoader(false);
 
         if (qs.empty) {
-            Swal.fire("Sin datos", "No se encontraron movimientos en " + anio, "info");
+            Swal.fire("Sin datos", "No se encontraron movimientos en el periodo seleccionado", "info");
         }
     } catch (e) {
         mostrarLoader(false);

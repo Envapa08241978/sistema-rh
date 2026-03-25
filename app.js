@@ -993,6 +993,32 @@ function descargarExcelBlob(wb, nombreArchivo) {
     URL.revokeObjectURL(a.href);
 }
 
+// === CONTRASEÑA PARA EXCEL ===
+const CLAVE_EXCEL = 'Navojoa2427';
+let sesionExcelActiva = false;
+
+async function validarClaveExcel() {
+    if (sesionExcelActiva) return true;
+    const { value: pass } = await Swal.fire({
+        title: 'Acceso restringido',
+        input: 'password',
+        inputLabel: 'Ingrese la contraseña para continuar',
+        inputPlaceholder: 'Contraseña',
+        showCancelButton: true,
+        confirmButtonText: 'Acceder',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#79242F',
+        inputValidator: (v) => { if (!v) return 'Debe ingresar la contraseña'; }
+    });
+    if (!pass) return false;
+    if (pass !== CLAVE_EXCEL) {
+        Swal.fire('Contraseña incorrecta', '', 'error');
+        return false;
+    }
+    sesionExcelActiva = true;
+    return true;
+}
+
 // === MAPEO DE COLUMNAS PARA PLANTILLA ===
 const EXCEL_COLUMNS = [
     { header: 'ID', field: 'id' },
@@ -1025,6 +1051,7 @@ const EXCEL_COLUMNS = [
 
 // === DESCARGAR PLANTILLA COMPLETA ===
 async function descargarPlantillaCompleta() {
+    if (!(await validarClaveExcel())) return;
     mostrarLoader(true, "Descargando plantilla...");
     try {
         const snapshot = await db.collection('empleados').get();
@@ -1074,6 +1101,7 @@ function descargarPlantillaVacia() {
 async function cargarExcelMasivo(event) {
     const file = event.target.files[0];
     if (!file) return;
+    if (!(await validarClaveExcel())) { event.target.value = ''; return; }
     try {
         const data = await file.arrayBuffer();
         const wb = XLSX.read(data, { type: 'array' });

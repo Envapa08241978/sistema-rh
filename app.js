@@ -711,7 +711,7 @@ function descargarExcel() {
     const ws = XLSX.utils.json_to_sheet(datosParaExcel);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Reporte");
-    XLSX.writeFile(wb, "Reporte_RH.xlsx");
+    descargarExcelBlob(wb, "Reporte_RH.xlsx");
 }
 
 // === ESTATUS ===
@@ -861,7 +861,7 @@ function exportarCorrespondenciaExcel() {
     const ws = XLSX.utils.json_to_sheet(datosExcel);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Correspondencia");
-    XLSX.writeFile(wb, "Correspondencia_Nomina.xlsx");
+    descargarExcelBlob(wb, "Correspondencia_Nomina.xlsx");
 }
 
 // === ESTADÍSTICAS DE INCIDENCIAS ===
@@ -979,3 +979,174 @@ async function generarEstadisticas() {
 
 document.getElementById('fechaSistema').innerText = new Date().toLocaleDateString();
 window.onload = initApp;
+
+// === HELPER: Forzar descarga con nombre correcto ===
+function descargarExcelBlob(wb, nombreArchivo) {
+    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = nombreArchivo;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(a.href);
+}
+
+// === MAPEO DE COLUMNAS PARA PLANTILLA ===
+const EXCEL_COLUMNS = [
+    { header: 'ID', field: 'id' },
+    { header: 'NOMBRE', field: 'nombre' },
+    { header: 'ESTATUS', field: 'estatus' },
+    { header: 'DEPENDENCIA', field: 'depto' },
+    { header: 'PUESTO', field: 'puesto' },
+    { header: 'TIPO', field: 'tipo' },
+    { header: 'EMPRESA', field: 'empresa' },
+    { header: 'FECHA_ALTA', field: 'fechaAlta' },
+    { header: 'CURP', field: 'curp' },
+    { header: 'TELEFONO', field: 'tel' },
+    { header: 'DIRECCION', field: 'direccion' },
+    { header: 'SEGURO', field: 'seguro' },
+    { header: 'POLIZA', field: 'poliza' },
+    { header: 'BANCO', field: 'banco' },
+    { header: 'CUENTA', field: 'cuenta' },
+    { header: 'CLABE', field: 'clabe' },
+    { header: 'NO_ARCHIVO', field: 'numArchivo' },
+    { header: 'NOMBRAMIENTO', field: 'oficioAlta' },
+    { header: 'SALDO_VAC', field: 'saldoVac' },
+    { header: 'SALDO_ECON', field: 'saldoEcon' },
+    { header: 'SALDO_PSG', field: 'saldoPSG' },
+    { header: 'SALDO_INCAP', field: 'saldoIncap' },
+    { header: 'ACUM_FALTAS', field: 'acumuladoFaltas' },
+    { header: 'ACUM_RETARDOS', field: 'acumuladoRetardos' },
+    { header: 'ACUM_LUTO', field: 'acumuladoLuto' },
+    { header: 'ACUM_COMISIONES', field: 'acumuladoComisiones' }
+];
+
+// === DESCARGAR PLANTILLA COMPLETA ===
+async function descargarPlantillaCompleta() {
+    mostrarLoader(true, "Descargando plantilla...");
+    try {
+        const snapshot = await db.collection('empleados').get();
+        if (snapshot.empty) {
+            mostrarLoader(false);
+            Swal.fire('Sin datos', 'No hay empleados registrados.', 'info');
+            return;
+        }
+        const rows = [];
+        snapshot.forEach(doc => {
+            const d = doc.data();
+            const row = {};
+            EXCEL_COLUMNS.forEach(col => {
+                let val = d[col.field];
+                if (val === undefined || val === null) val = '';
+                row[col.header] = val;
+            });
+            rows.push(row);
+        });
+        const ws = XLSX.utils.json_to_sheet(rows, { header: EXCEL_COLUMNS.map(c => c.header) });
+        ws['!cols'] = EXCEL_COLUMNS.map(c => ({ wch: c.header === 'NOMBRE' || c.header === 'DIRECCION' ? 35 : c.header === 'CURP' || c.header === 'CLABE' ? 22 : 15 }));
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Empleados');
+        const fecha = new Date().toISOString().split('T')[0];
+        descargarExcelBlob(wb, `Plantilla_RH_NAVOJOA_${fecha}.xlsx`);
+        mostrarLoader(false);
+        Swal.fire('Descargado', `${rows.length} empleados exportados a Excel.`, 'success');
+    } catch (e) {
+        mostrarLoader(false);
+        console.error(e);
+        Swal.fire('Error', 'No se pudo descargar: ' + e.message, 'error');
+    }
+}
+
+// === DESCARGAR PLANTILLA VACÍA (TEMPLATE) ===
+function descargarPlantillaVacia() {
+    const headers = EXCEL_COLUMNS.map(c => c.header);
+    const ws = XLSX.utils.aoa_to_sheet([headers]);
+    ws['!cols'] = EXCEL_COLUMNS.map(c => ({ wch: c.header === 'NOMBRE' || c.header === 'DIRECCION' ? 35 : c.header === 'CURP' || c.header === 'CLABE' ? 22 : 15 }));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Plantilla');
+    descargarExcelBlob(wb, 'Plantilla_Carga_RH_NAVOJOA.xlsx');
+    Swal.fire('Plantilla descargada', 'Llena los datos usando esta plantilla y luego cárgala con el botón "Cargar".', 'info');
+}
+
+// === CARGAR EXCEL MASIVO ===
+async function cargarExcelMasivo(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    try {
+        const data = await file.arrayBuffer();
+        const wb = XLSX.read(data, { type: 'array' });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
+        if (rows.length === 0) {
+            Swal.fire('Vacío', 'El archivo Excel no tiene filas de datos.', 'warning');
+            event.target.value = '';
+            return;
+        }
+        if (!rows[0].hasOwnProperty('ID')) {
+            Swal.fire('Error de formato', 'El Excel debe tener una columna llamada "ID". Descarga la plantilla vacía para ver el formato correcto.', 'error');
+            event.target.value = '';
+            return;
+        }
+        const confirm = await Swal.fire({
+            icon: 'question',
+            title: 'Confirmar carga masiva',
+            html: `Se procesarán <b>${rows.length}</b> registros.<br><br><small class="text-muted">IDs existentes se actualizarán. IDs nuevos se crearán.</small>`,
+            showCancelButton: true,
+            confirmButtonText: 'Sí, procesar',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#79242F'
+        });
+        if (!confirm.isConfirmed) { event.target.value = ''; return; }
+        mostrarLoader(true, "Procesando carga masiva...");
+        let actualizados = 0, nuevos = 0, errores = 0;
+        const erroresDetalle = [];
+        for (const row of rows) {
+            const id = String(row['ID'] || '').trim().toUpperCase();
+            if (!id) { errores++; erroresDetalle.push('Fila sin ID'); continue; }
+            try {
+                const docData = {};
+                EXCEL_COLUMNS.forEach(col => {
+                    if (col.header === 'ID') return;
+                    if (row.hasOwnProperty(col.header) && row[col.header] !== '') {
+                        let val = row[col.header];
+                        if (col.field.startsWith('saldo') || col.field.startsWith('acumulado')) val = parseFloat(val) || 0;
+                        docData[col.field] = val;
+                    }
+                });
+                docData.id = id;
+                const docRef = db.collection('empleados').doc(id);
+                const docSnap = await docRef.get();
+                if (docSnap.exists) {
+                    await docRef.update(docData);
+                    actualizados++;
+                } else {
+                    if (docData.saldoVac === undefined) docData.saldoVac = 0;
+                    if (docData.saldoEcon === undefined) docData.saldoEcon = 2;
+                    if (docData.saldoPSG === undefined) docData.saldoPSG = 0;
+                    if (docData.saldoIncap === undefined) docData.saldoIncap = 0;
+                    if (docData.acumuladoFaltas === undefined) docData.acumuladoFaltas = 0;
+                    if (docData.acumuladoRetardos === undefined) docData.acumuladoRetardos = 0;
+                    if (docData.acumuladoLuto === undefined) docData.acumuladoLuto = 0;
+                    if (docData.acumuladoComisiones === undefined) docData.acumuladoComisiones = 0;
+                    if (!docData.estatus) docData.estatus = 'ACTIVO';
+                    await docRef.set(docData);
+                    nuevos++;
+                }
+            } catch (err) {
+                errores++;
+                erroresDetalle.push(`ID ${id}: ${err.message}`);
+            }
+        }
+        mostrarLoader(false);
+        let resumenHtml = `<b>Actualizados:</b> ${actualizados}<br><b>Nuevos:</b> ${nuevos}`;
+        if (errores > 0) resumenHtml += `<br><b class="text-danger">Errores:</b> ${errores}<br><small>${erroresDetalle.slice(0, 5).join('<br>')}</small>`;
+        Swal.fire({ icon: errores > 0 ? 'warning' : 'success', title: 'Carga completada', html: resumenHtml });
+    } catch (e) {
+        mostrarLoader(false);
+        console.error(e);
+        Swal.fire('Error', 'No se pudo procesar el archivo: ' + e.message, 'error');
+    }
+    event.target.value = '';
+}

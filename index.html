@@ -298,6 +298,12 @@
             <button class="btn btn-warning fw-bold" onclick="abrirCorrespondencia()" title="Correspondencia de Nómina">
                 <i class="bi bi-envelope-fill me-1"></i>CORRESPONDENCIA
             </button>
+            <button class="btn btn-success btn-sm d-none d-md-inline-flex align-items-center gap-1" onclick="descargarPlantillaCompleta()" title="Descargar toda la plantilla de empleados a Excel"><i class="bi bi-file-earmark-arrow-down"></i> Excel</button>
+            <div class="btn-group d-none d-md-inline-flex" role="group">
+                <button class="btn btn-info btn-sm text-white d-inline-flex align-items-center gap-1" onclick="document.getElementById('fileImportExcel').click()" title="Cargar Excel para actualización masiva"><i class="bi bi-file-earmark-arrow-up"></i> Cargar</button>
+                <button class="btn btn-outline-info btn-sm text-white" onclick="descargarPlantillaVacia()" title="Descargar plantilla vacía de ejemplo"><i class="bi bi-file-earmark-ruled"></i></button>
+            </div>
+            <input type="file" id="fileImportExcel" class="input-file-oculto" accept=".xlsx,.xls" onchange="cargarExcelMasivo(event)">
             <div class="text-end d-none d-md-block">
                 <span class="d-block fw-bold" id="fechaSistema"></span>
                 <span class="badge bg-warning text-dark border border-white">SISTEMA v88.0</span>

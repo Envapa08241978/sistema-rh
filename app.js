@@ -222,6 +222,15 @@ function renderizarEmpleado() {
     const st = determinarEstatus(e);
     const badge = document.getElementById('lblStatusDinamico');
     if (badge) { badge.innerText = st.texto; badge.className = "badge-base " + st.clase; }
+
+    const contIncap = document.getElementById('contenedorIncapacidad');
+    const lblIncap = document.getElementById('lblIncapFase');
+    if (e.estatus_incapacidad) {
+        if(contIncap) contIncap.classList.remove('d-none');
+        if(lblIncap) lblIncap.innerText = `PAGO AL ${e.porcentaje_pago_actual || 0}%`;
+    } else {
+        if(contIncap) contIncap.classList.add('d-none');
+    }
 }
 
 function calcularSaldoVacacionesReales(empleado) {
@@ -284,7 +293,10 @@ window.abrirBase64 = function (docId) {
 };
 
 function determinarEstatus(e) {
-    const estatusFijos = ['BAJA', 'JUBILADO', 'PENSIONADO', 'SUSPENDIDO'];
+    if (e.estatus_incapacidad) return { texto: 'INCAPACITADO (' + (e.porcentaje_pago_actual || 0) + '%)', clase: 'estatus-incapacidad' };
+    
+    // Check for "INCAPACITADO" as a string status just in case
+    const estatusFijos = ['BAJA', 'JUBILADO', 'PENSIONADO', 'SUSPENDIDO', 'INCAPACITADO'];
     if (estatusFijos.some(s => e.estatus && e.estatus.includes(s))) return { texto: e.estatus, clase: 'estatus-' + e.estatus.split(' ')[0].toLowerCase() };
     const now = new Date();
     const hoy = new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
@@ -292,7 +304,7 @@ function determinarEstatus(e) {
         const mov = e.movimientos.find(m => hoy >= m.fechaInicio && hoy <= m.fechaFin);
         if (mov) {
             if (mov.tipo === 'VACACIONES') return { texto: 'DE VACACIONES', clase: 'estatus-vacaciones' };
-            if (mov.tipo === 'INCAPACIDAD') return { texto: 'INCAPACITADO', clase: 'estatus-incapacidad' };
+            if (mov.tipo === 'INCAPACIDAD') return { texto: 'INCAPACITADO (TEMPORAL)', clase: 'estatus-incapacidad' };
             if (mov.tipo.includes('PERMISO')) return { texto: 'CON PERMISO', clase: 'estatus-permiso' };
             if (mov.tipo === 'COMISION') return { texto: 'EN COMISIÓN', clase: 'estatus-comision' };
         }
@@ -337,12 +349,37 @@ async function guardarIncapacidad() {
         const acumulado = (empleadoActual.saldoIncap || 0);
         const nuevoTotal = acumulado + dias;
         if (nuevoTotal > limite) {
-            const msg = `<b>Antigüedad:</b> ${antiguedad.toFixed(1)} años<br><b>Límite:</b> ${limite} días<br><b>Acumulado:</b> ${acumulado}<br><b>Nuevo total:</b> ${nuevoTotal}<br><br>¿Registrar excediendo límite?`;
-            const result = await Swal.fire({ icon: 'warning', title: '¡ALERTA ARTÍCULO 100!', html: msg, showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'Sí, registrar' });
+            const msg = `<b>Antigüedad:</b> ${antiguedad.toFixed(1)} años<br><b>Límite 100%:</b> ${limite} días<br><b>Acumulado:</b> ${acumulado}<br><b>Nuevo total:</b> ${nuevoTotal}<br><br>Se reajustará el porcentaje de pago de acuerdo al Artículo 100. ¿Registrar?`;
+            const result = await Swal.fire({ icon: 'warning', title: '¡PAGO AL 50% O SUBSIDIO!', html: msg, showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'Sí, registrar' });
             if (!result.isConfirmed) return;
         }
     }
-    await guardarMovGenerico("INCAPACIDAD", "Incap", dias, { saldoIncap: (empleadoActual.saldoIncap || 0) + dias });
+
+    // Calcular porcentaje de pago
+    let porcentaje = 100;
+    if (tipo === "ENFERMEDAD GENERAL") {
+        const acumulado = (empleadoActual.saldoIncap || 0) + dias;
+        if (acumulado > limite) {
+            const limiteFase2 = limite * 2;
+            if (acumulado > limiteFase2) {
+                porcentaje = 0; // Subsidio
+            } else {
+                porcentaje = 50;
+            }
+        }
+    }
+
+    const currentYear = new Date().getFullYear();
+    const updateObj = {
+        saldoIncap: (empleadoActual.saldoIncap || 0) + dias,
+        estatus_incapacidad: true,
+        tipo_incapacidad: tipo,
+        fecha_inicio_incapacidad: document.getElementById('txtFechaIncap').value,
+        dias_incapacidad_acumulados_anio: currentYear,
+        porcentaje_pago_actual: porcentaje
+    };
+
+    await guardarMovGenerico("INCAPACIDAD", "Incap", dias, updateObj);
 }
 
 // === GUARDAR PERMISO (REGLAS SINDICALES ACTIVAS) ===
@@ -581,6 +618,56 @@ function generarReporte() {
     if (!fIni || !fFin) { Swal.fire("Fechas requeridas", "", "warning"); return; }
     mostrarLoader(true, "Generando reporte...");
 
+    const tipoSel = document.getElementById('repTipo').value;
+
+    // Lógica Especial: INCAPACITADOS ACTIVOS (Consulta a Colección Empleados en lugar de Movimientos)
+    if (tipoSel === 'INCAPACITADOS_ACTIVOS') {
+        db.collection("empleados").where("estatus_incapacidad", "==", true).get().then(qs => {
+            const tbody = document.getElementById('tablaReportesBody');
+            tbody.innerHTML = "";
+            let dataExport = [];
+            const empFilter = document.getElementById('repEmpleado').value.toUpperCase();
+
+            qs.forEach(doc => {
+                const d = doc.data();
+                if (empFilter && !d.nombre.includes(empFilter) && !d.id.includes(empFilter)) return;
+                
+                tbody.innerHTML += `<tr>
+                    <td>${d.fecha_inicio_incapacidad || '---'}</td>
+                    <td><span class="badge bg-danger">ABIERTA</span></td>
+                    <td>${d.nombre}</td>
+                    <td><small>${d.depto || '---'}</small></td>
+                    <td>${d.tipo_incapacidad || 'INCAPACITADO'}</td>
+                    <td>---</td>
+                    <td>PAGO AL ${d.porcentaje_pago_actual || 0}%</td>
+                    <td>A la espera de RH</td>
+                    <td>-</td>
+                </tr>`;
+
+                dataExport.push({
+                    "Fecha Inicio": d.fecha_inicio_incapacidad || "",
+                    "Fecha Fin": "ABIERTA",
+                    "ID Empleado": d.id,
+                    "Nombre": d.nombre,
+                    "Departamento": d.depto || "---",
+                    "Tipo": d.tipo_incapacidad || "INCAPACIDAD",
+                    "Días": "N/A",
+                    "Oficio": `PAGO AL ${d.porcentaje_pago_actual || 0}%`,
+                    "Detalle": "Incidente Activo"
+                });
+            });
+
+            window.datosReporteActual = dataExport;
+            document.getElementById('repContador').innerText = `Resultados: ${dataExport.length}`;
+            mostrarLoader(false);
+        }).catch(error => {
+            mostrarLoader(false);
+            Swal.fire("Error", error.message, "error");
+        });
+        return;
+    }
+
+    // Lógica Estándar (Colección Movimientos)
     // CORRECCIÓN: Filtrar por fecha DIRECTAMENTE en la base de datos
     db.collection("movimientos")
         .where("fechaInicio", ">=", fIni)
@@ -593,7 +680,6 @@ function generarReporte() {
             tbody.innerHTML = "";
             let dataExport = [];
             const empFilter = document.getElementById('repEmpleado').value.toUpperCase();
-            const tipoSel = document.getElementById('repTipo').value;
 
             if (qs.empty) {
                 document.getElementById('repContador').innerText = "Resultados: 0";
@@ -725,7 +811,14 @@ async function actualizarEstatus() {
         let url = file ? await subirArchivoStorage(file, `evidencias/${empleadoActual.id}/${Date.now()}_BAJA_${file.name}`) : "";
         const fechaHoy = new Date().toISOString().split('T')[0];
         await db.collection("movimientos").add({ empleadoId: empleadoActual.id, nombreEmpleado: empleadoActual.nombre, tipo: "CAMBIO_ESTATUS", dias: 0, oficio: "CAMBIO A " + nuevoEstatus, fechaInicio: fechaHoy, fechaFin: fechaHoy, urlEvidencia: url, fechaRegistro: firebase.firestore.FieldValue.serverTimestamp() });
-        await db.collection("empleados").doc(empleadoActual.docId).update({ estatus: nuevoEstatus });
+        
+        let updateObj = { estatus: nuevoEstatus };
+        if (nuevoEstatus === 'ACTIVO') {
+            updateObj.estatus_incapacidad = false;
+            updateObj.porcentaje_pago_actual = 100;
+        }
+
+        await db.collection("empleados").doc(empleadoActual.docId).update(updateObj);
         mostrarLoader(false);
         Swal.fire("Estatus Actualizado", `Empleado: ${nuevoEstatus}`, "success");
         resetForm('Baja');

@@ -447,6 +447,9 @@
                             <div id="contenedorEstatus" class="mt-3">
                                 <span class="badge-base estatus-activo" id="lblStatusDinamico">ACTIVO</span>
                             </div>
+                            <div id="contenedorIncapacidad" class="mt-2 d-none">
+                                <span class="badge bg-danger fs-6 text-wrap fw-bold w-100" id="lblIncapFase">--</span>
+                            </div>
                         </div>
                         <div class="seccion-titulo">DATOS PRINCIPALES</div>
                         <div class="row g-2">
@@ -1054,8 +1057,9 @@
                                         <div class="col-3"><label class="etiqueta">Tipo</label><select
                                                 class="form-select" id="repTipo">
                                                 <option value="TODOS">TODOS</option>
+                                                <option value="INCAPACITADOS_ACTIVOS">INCAPACITADOS ACTUALES</option>
                                                 <option value="VACACIONES">VACACIONES</option>
-                                                <option value="INCAPACIDAD">INCAPACIDAD</option>
+                                                <option value="INCAPACIDAD">INCAPACIDAD (HISTÓRICO)</option>
                                                 <option value="PERMISOS">PERMISOS (Todos)</option>
                                                 <option value="HORAS_EXTRA">HORAS EXTRA</option>
                                                 <option value="ALTA">ALTAS</option>
@@ -1142,6 +1146,7 @@
                                     <h5>Gestión de Estatus</h5>
                                     <select class="form-select mb-3 w-50 mx-auto" id="cmbNuevoEstatus">
                                         <option>BAJA</option>
+                                        <option>INCAPACITADO</option>
                                         <option>JUBILADO</option>
                                         <option>PENSIONADO</option>
                                         <option>SUSPENDIDO</option>
